@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OpenSeadragon Viewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.css"/>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    #openseadragon {
+      width: 100%;
+      height: 100%;
+      background-color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="openseadragon"></div>
+
+  <script>
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.error);
+    });
+
+    const viewer = OpenSeadragon({
+      id: "openseadragon",
+      prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+      tileSources: "http://localhost:8000/002_dzi.dzi",
+      showNavigator: true,
+      // SPEED OPTIMIZED SETTINGS
+      maxZoomPixelRatio: 10,         // Reasonable zoom limit
+      minZoomLevel: 0,
+      maxZoomLevel: 30,              // Allow up to level 25+ (your new max)
+      visibilityRatio: 0.8,          // Load tiles when 80% visible (faster)
+      minPixelRatio: 0.3,            // Load high-res tiles aggressively
+      // Fast zoom behavior
+      zoomPerClick: 2.0,
+      zoomPerScroll: 1.4,            // Faster scroll zoom
+      animationTime: 0.1,            // VERY fast animations
+      springStiffness: 15.0,         // Snappy animations
+      // AGGRESSIVE tile loading for speed
+      immediateRender: false,        // Don't wait, show immediately
+      blendTime: 0.0,               // NO blending delay
+      alwaysBlend: false,
+      wrapHorizontal: false,
+      wrapVertical: false,
+      constrainDuringPan: false,     // Free panning
+      // MAXIMUM SPEED settings
+      imageLoaderLimit: 8,           // Load 8 tiles simultaneously
+      timeout: 15000,               // 15 second timeout (fast fail)
+      maxImageCacheCount: 500,      // Large cache for speed
+      preload: true,                // Preload adjacent tiles
+      // Add error handlers
+      onError: function(event) {
+        console.error('OpenSeadragon error:', event);
+      }
+    });
+
+    viewer.addHandler('open', function() {
+      console.log('Image opened successfully');
+      console.log('Max zoom level:', viewer.viewport.getMaxZoom());
+      console.log('Image dimensions:', viewer.world.getItemAt(0).getContentSize());
+      
+      // FORCE maximum zoom to use all DZI levels (0-11)
+      var tiledImage = viewer.world.getItemAt(0);
+      var maxLevel = tiledImage.source.maxLevel; // Should be 11
+      console.log('DZI max level:', maxLevel);
+      
+      // Calculate maximum zoom to reach level 11
+      var maxZoom = Math.pow(2, maxLevel);
+      console.log('Calculated max zoom for level', maxLevel, ':', maxZoom);
+      
+      // Override the viewport max zoom
+      viewer.viewport.maxZoomLevel = maxZoom;
+      viewer.viewport._maxZoomLevel = maxZoom;
+    });
+
+    viewer.addHandler('open-failed', function(event) {
+      console.error('Failed to open image:', event);
+    });
+
+    viewer.addHandler('tile-load-failed', function(event) {
+      console.error('Tile load failed:', event);
+    });
+
+    viewer.addHandler('zoom', function(event) {
+      console.log('Current zoom:', event.zoom, 'Max zoom:', viewer.viewport.getMaxZoom());
+    });
+
+    viewer.addHandler('tile-loaded', function(event) {
+      console.log('Tile loaded at level:', event.tile.level, 'url:', event.tile.url);
+    });
+  </script>
+</body>
+</html>
