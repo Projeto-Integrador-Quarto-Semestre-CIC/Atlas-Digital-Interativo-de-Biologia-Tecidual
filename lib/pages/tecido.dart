@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
 import 'package:app_pii/components/viewer.dart'; 
-
 class TelaTecido extends StatefulWidget {
   const TelaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
   final String nome;
@@ -52,6 +51,23 @@ class _DescricaoCompleta extends StatelessWidget {
 }
 
 class _TelaTecidoState extends State<TelaTecido> {
+  late Widget _viewer;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewer = Viewer(tileSource: widget.tileSource);
+  }
+
+  @override
+  void didUpdateWidget(covariant TelaTecido oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tileSource != widget.tileSource) {
+      setState(() {
+        _viewer = Viewer(tileSource: widget.tileSource);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,18 +78,47 @@ class _TelaTecidoState extends State<TelaTecido> {
         final isNarrow = constraints.maxWidth < breakpoint;
 
         return Scaffold(
-          backgroundColor: const Color(0xFF4B5190),
-          drawer: isNarrow ? const BarraLateralDrawer() : null,
+           backgroundColor: const Color(0xFF4B5190),
+          drawer: isNarrow ? const SidebarDrawer() : null,
 
           appBar: isNarrow
               ? AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  toolbarHeight: 120,
+                  leading: Builder(
+                    builder: (context) {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Scaffold.of(context).openDrawer(),
+                            borderRadius: BorderRadius.circular(10),
+                            splashColor: Colors.white24,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              margin: const EdgeInsets.only(left: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.menu, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  title: const Center(child: BotaoHome(sidebar: false)),
+                  centerTitle: true,
                 )
               : null,
           body: Row(
             children: [
-              if (!isNarrow) const BarraLateral(),
+              if (!isNarrow) const Sidebar(),
 
               Expanded(
                 child: Padding(
@@ -84,9 +129,7 @@ class _TelaTecidoState extends State<TelaTecido> {
                           children: [
                             Flexible(
                               flex: 2,
-                              child: Container(
-                                color: Colors.red,
-                              ),
+                              child: _viewer,
                             ),
                             const SizedBox(height: 16, width: 20),
                             Flexible(
@@ -104,10 +147,7 @@ class _TelaTecidoState extends State<TelaTecido> {
                           children: [
                             Flexible(
                               flex: 3,
-                              child: Container(
-                                height: 600,
-                                child: Viewer(tileSource: widget.tileSource)
-                              ),
+                              child: _viewer,
                             ),
                             const SizedBox(width: 8),
                             Flexible(

@@ -1,28 +1,63 @@
 import 'package:flutter/material.dart';
 
-class _ConteudoBarra extends StatelessWidget {
-  const _ConteudoBarra();
+class BotaoHome extends StatelessWidget {
+  final bool? sidebar;
+  const BotaoHome({super.key, this.sidebar});
+
+  @override
+  Widget build(BuildContext context){
+    final bool isSidebar = sidebar ?? (MediaQuery.of(context).size.width >= 800);
+
+    if (isSidebar) {
+      return TextButton(
+        onPressed: () { print("HOME CLICADO!"); }, // TODO: navegação HOME
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size.fromHeight(130),
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        ),
+        child: Image.asset(
+          'assets/images/logo.png',
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 130,
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 110,
+      child: Center(
+        child: SizedBox.square(
+          dimension: 250,
+          child: InkWell(
+            onTap: () { print("HOME CLICADO!"); }, // TODO: navegação HOME
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.fitWidth,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  } 
+}
+
+class _SidebarContent extends StatelessWidget {
+  const _SidebarContent();
 
   @override
   Widget build(BuildContext context) {
+    final bool telaGrande = MediaQuery.of(context).size.width >= 800;
+
     return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextButton(
-            onPressed: () { print("HOME CLICADO!"); }, // TODO: código que leva pra HOME
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size.fromHeight(130),
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-            ),
-            child: Image.asset(
-              'assets/images/logo.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 130
-            ),
-          ),
+          if (telaGrande) const BotaoHome(sidebar: true),
           Container(
             decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
@@ -63,7 +98,7 @@ class _ConteudoBarra extends StatelessWidget {
             decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
             child: TextButton.icon(
-                onPressed: () {print("CONTATO CLICADO!");}, // TODO: código que leva pra EXPLORAR
+                onPressed: () {print("CONTATO CLICADO!");}, // TODO: código que leva pra CONTATO
                 icon: const Icon(Icons.phone, size: 30, color: Colors.white),
                 label: const Align(
                   alignment: Alignment.centerLeft,
@@ -83,8 +118,8 @@ class _ConteudoBarra extends StatelessWidget {
   }
 }
 
-class BarraLateral extends StatelessWidget {
-  const BarraLateral({super.key, this.width = 280});
+class Sidebar extends StatelessWidget {
+  const Sidebar({super.key, this.width = 280});
 
   final double width;
 
@@ -93,20 +128,20 @@ class BarraLateral extends StatelessWidget {
     return Container(
       width: width,
       color: const Color(0xFF38853A),
-      child: const _ConteudoBarra(),
+      child: const _SidebarContent(),
     );
   }
 }
 
-class BarraLateralDrawer extends StatelessWidget {
-  const BarraLateralDrawer({super.key});
+class SidebarDrawer extends StatelessWidget {
+  const SidebarDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       backgroundColor: const Color(0xFF38853A),
-      child: const _ConteudoBarra(),
+      child: const _SidebarContent(),
     );
   }
 }
