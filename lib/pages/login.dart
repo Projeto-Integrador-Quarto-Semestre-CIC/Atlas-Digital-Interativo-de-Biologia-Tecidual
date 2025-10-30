@@ -35,7 +35,7 @@ class TelaLogin extends StatelessWidget {
 															height: 48,
 															margin: const EdgeInsets.only(left: 8),
 															decoration: BoxDecoration(
-																color: Colors.green,
+																color: const Color(0xFF38853A),
 																borderRadius: BorderRadius.circular(10),
 															),
 															child: const Icon(Icons.menu, color: Colors.white),
@@ -50,64 +50,109 @@ class TelaLogin extends StatelessWidget {
 								)
 							: null,
 
-					body: Row(
-						children: [
-							if (!isNarrow) const Sidebar(),
+								body: Row(
+									children: [
+										if (!isNarrow) const Sidebar(),
 
-							Expanded(
-								child: Center(
-									child: Container(
-										padding: const EdgeInsets.all(20),
-										constraints: const BoxConstraints(maxWidth: 400),
-										child: Column(
-											mainAxisAlignment: MainAxisAlignment.center,
-											children: [
-												Card(
-													child: Padding(
-														padding: const EdgeInsets.all(16),
+										Expanded(
+											child: Center(
+												child: ConstrainedBox(
+													constraints: const BoxConstraints(maxWidth: 720),
+													child: Container(
+														margin: const EdgeInsets.symmetric(horizontal: 24),
+														padding: const EdgeInsets.all(28),
+														decoration: BoxDecoration(
+															color: const Color(0xFF2FA14A),
+															borderRadius: BorderRadius.circular(16),
+														),
 														child: Column(
+															mainAxisSize: MainAxisSize.min,
+															crossAxisAlignment: CrossAxisAlignment.stretch,
 															children: [
-																TextField(
-																	decoration: InputDecoration(
-																		labelText: 'Email',
-																		border: OutlineInputBorder(),
-																		prefixIcon: const Icon(Icons.email),
+																const SizedBox(height: 8),
+																const Center(
+																	child: Text(
+																		'Login para Editores',
+																		style: TextStyle(
+																			color: Colors.white,
+																			fontSize: 38,
+																			fontWeight: FontWeight.w600,
+																		),
 																	),
 																),
-																const SizedBox(height: 16),
+																const SizedBox(height: 28),
+
+																// Campo usuário
+																TextField(
+																	decoration: InputDecoration(
+																		hintText: 'Usuario:',
+																		filled: true,
+																		fillColor: const Color(0xFFF0F0F0),
+																		contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+																		border: OutlineInputBorder(
+																			borderRadius: BorderRadius.circular(8),
+																			borderSide: BorderSide.none,
+																		),
+																		suffixIcon: const Icon(Icons.person_outline, color: Color(0xFF2FA14A)),
+																	),
+																	style: const TextStyle(color: Color(0xFF2FA14A), fontSize: 18),
+																),
+																const SizedBox(height: 26),
+
+																// Campo senha
 																TextField(
 																	obscureText: true,
 																	decoration: InputDecoration(
-																		labelText: 'Senha',
-																		border: OutlineInputBorder(),
-																		prefixIcon: const Icon(Icons.lock),
+																		hintText: 'Senha:',
+																		filled: true,
+																		fillColor: const Color(0xFFF0F0F0),
+																		contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+																		border: OutlineInputBorder(
+																			borderRadius: BorderRadius.circular(8),
+																			borderSide: BorderSide.none,
+																		),
+																		suffixIcon: const Icon(Icons.lock_outline, color: Color(0xFF2FA14A)),
+																	),
+																	style: const TextStyle(color: Color(0xFF2FA14A), fontSize: 18),
+																),
+																const SizedBox(height: 26),
+
+																// Botão entrar
+																SizedBox(
+																	width: 160,
+																	child: ElevatedButton(
+																		onPressed: () {
+																		},
+																		style: ElevatedButton.styleFrom(
+																			backgroundColor: Colors.white,
+																			shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+																			padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+																			elevation: 2,
+																		),
+																		child: const Text(
+																			'entrar',
+																			style: TextStyle(color: Color(0xFF2FA14A), fontSize: 28, fontWeight: FontWeight.w500),
+																		),
 																	),
 																),
-																const SizedBox(height: 24),
-																ElevatedButton(
-																	onPressed: () {
-																		// TODO: lógica de login
-																	},
-																	style: ElevatedButton.styleFrom(
-																		backgroundColor: const Color(0xFF38853A),
-																		padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-																	),
+
+																const SizedBox(height: 14),
+																TextButton(
+																	onPressed: () {},
 																	child: const Text(
-																		'Entrar',
-																		style: TextStyle(fontSize: 16, color: Colors.white),
+																		'Esqueci a senha',
+																		style: TextStyle(color: Colors.white70, fontSize: 14),
 																	),
 																),
+																const SizedBox(height: 8),
 															],
 														),
 													),
 												),
-											],
+											),
 										),
-									),
+									],
 								),
-							),
-						],
-					),
 				);
 			},
 		);
