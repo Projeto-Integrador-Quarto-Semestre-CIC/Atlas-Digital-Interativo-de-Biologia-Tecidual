@@ -10,7 +10,7 @@ class BotaoHome extends StatelessWidget {
 
     if (isSidebar) {
       return TextButton(
-        onPressed: () { print("HOME CLICADO!"); }, // TODO: navegação HOME
+        onPressed: () { Navigator.of(context).popUntil((route) => route.isFirst); },
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(130),
@@ -31,7 +31,7 @@ class BotaoHome extends StatelessWidget {
         child: SizedBox.square(
           dimension: 250,
           child: InkWell(
-            onTap: () { print("HOME CLICADO!"); }, // TODO: navegação HOME
+            onTap: () { Navigator.of(context).popUntil((route) => route.isFirst); },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
@@ -62,7 +62,7 @@ class _SidebarContent extends StatelessWidget {
             decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
             child: TextButton.icon(
-                onPressed: () {print("LOGIN CLICADO!");}, // TODO: código que leva pra LOGIN
+                onPressed: () => Navigator.pushNamed(context, '/login'), // TODO: código que leva pra LOGIN
                 icon: const Icon(Icons.person, size: 30, color: Colors.white),
                 label: const Align(
                   alignment: Alignment.centerLeft,
@@ -144,4 +144,15 @@ class SidebarDrawer extends StatelessWidget {
       child: const _SidebarContent(),
     );
   }
+}
+
+// Backwards-compatible aliases: alguns testes/parts do projeto ainda esperam
+// os nomes antigos `BarraLateral` / `BarraLateralDrawer`. Mantemos aliases
+// leves para não quebrar integrações existentes.
+class BarraLateral extends Sidebar {
+  const BarraLateral({super.key, double width = 280}) : super(width: width);
+}
+
+class BarraLateralDrawer extends SidebarDrawer {
+  const BarraLateralDrawer({super.key});
 }
