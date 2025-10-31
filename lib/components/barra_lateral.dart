@@ -98,7 +98,7 @@ class _SidebarContent extends StatelessWidget {
             decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
             child: TextButton.icon(
-                onPressed: () {print("CONTATO CLICADO!");}, // TODO: código que leva pra CONTATO
+                onPressed: () => Navigator.pushNamed(context, '/contato'),
                 icon: const Icon(Icons.phone, size: 30, color: Colors.white),
                 label: const Align(
                   alignment: Alignment.centerLeft,

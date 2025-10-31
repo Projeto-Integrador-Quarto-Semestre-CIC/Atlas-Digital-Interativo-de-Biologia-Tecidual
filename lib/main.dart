@@ -1,6 +1,7 @@
 import 'package:app_pii/pages/tecido.dart';
 import 'package:flutter/material.dart';
 import 'package:app_pii/pages/login.dart';
+import 'package:app_pii/pages/contato.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       routes: {
         '/login': (context) => const TelaLogin(),
+        '/contato': (context) => const PaginaContato(),
       },
       home: const TelaTecido(
         nome: 'Tecido Teste',
