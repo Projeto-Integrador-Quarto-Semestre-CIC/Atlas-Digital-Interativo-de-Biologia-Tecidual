@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
 import 'package:app_pii/components/viewer.dart'; 
-class TelaTecido extends StatefulWidget {
-  const TelaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
+class PaginaTecido extends StatefulWidget {
+  const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
   final String nome;
   final String descricao;
   final String referenciasBibliograficas;
   final String tileSource;
 
   @override
-  State<TelaTecido> createState() => _TelaTecidoState();
+  State<PaginaTecido> createState() => _PaginaTecidoState();
 }
 
 class _DescricaoCompleta extends StatelessWidget {
@@ -50,7 +50,7 @@ class _DescricaoCompleta extends StatelessWidget {
   }
 }
 
-class _TelaTecidoState extends State<TelaTecido> {
+class _PaginaTecidoState extends State<PaginaTecido> {
   late Widget _viewer;
 
   @override
@@ -60,7 +60,7 @@ class _TelaTecidoState extends State<TelaTecido> {
   }
 
   @override
-  void didUpdateWidget(covariant TelaTecido oldWidget) {
+  void didUpdateWidget(covariant PaginaTecido oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.tileSource != widget.tileSource) {
       setState(() {

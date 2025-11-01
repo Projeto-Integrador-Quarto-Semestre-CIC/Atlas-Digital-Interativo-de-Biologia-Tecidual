@@ -13,7 +13,7 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(1200, 800));
 
       await tester.pumpWidget(const MaterialApp(
-        home: TelaTecido(
+        home: PaginaTecido(
           nome: 'Tecido X',
           descricao: 'Descrição',
           referenciasBibliograficas: 'Referência 1\n Referência 2',
@@ -34,7 +34,7 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(400, 800));
 
       await tester.pumpWidget(const MaterialApp(
-        home: TelaTecido(
+        home: PaginaTecido(
           nome: 'Tecido X',
           descricao: 'Descrição',
           referenciasBibliograficas: 'Referência 1\n Referência 2',

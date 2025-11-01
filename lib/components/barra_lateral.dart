@@ -62,7 +62,7 @@ class _SidebarContent extends StatelessWidget {
             decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
             child: TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/login'), // TODO: código que leva pra LOGIN
+                onPressed: () => Navigator.pushNamed(context, '/login'),
                 icon: const Icon(Icons.person, size: 30, color: Colors.white),
                 label: const Align(
                   alignment: Alignment.centerLeft,
@@ -80,7 +80,7 @@ class _SidebarContent extends StatelessWidget {
             decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
             child: TextButton.icon(
-                onPressed: () {print("EXPLORAR CLICADO!");}, // TODO: código que leva pra EXPLORAR
+                onPressed: () => Navigator.pushNamed(context, '/explorar'),
                 icon: const Icon(Icons.search, size: 30, color: Colors.white),
                 label: const Align(
                   alignment: Alignment.centerLeft,

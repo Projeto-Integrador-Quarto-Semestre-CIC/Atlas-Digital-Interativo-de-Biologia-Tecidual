@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
 
-class TelaLogin extends StatelessWidget {
-	const TelaLogin({super.key});
+class PaginaLogin extends StatelessWidget {
+	const PaginaLogin({super.key});
 
 	@override
 	Widget build(BuildContext context) {
