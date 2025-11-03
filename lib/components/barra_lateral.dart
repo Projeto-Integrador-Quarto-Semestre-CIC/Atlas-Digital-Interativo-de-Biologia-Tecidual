@@ -10,7 +10,9 @@ class BotaoHome extends StatelessWidget {
 
     if (isSidebar) {
       return TextButton(
-        onPressed: () { Navigator.of(context).popUntil((route) => route.isFirst); },
+          onPressed: () {
+            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+          },
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(130),
@@ -31,7 +33,14 @@ class BotaoHome extends StatelessWidget {
         child: SizedBox.square(
           dimension: 250,
           child: InkWell(
-            onTap: () { Navigator.of(context).popUntil((route) => route.isFirst); },
+              onTap: () {
+                // Close the drawer if it's open
+                if (Scaffold.of(context).hasDrawer) {
+                  Navigator.of(context).pop();
+                }
+                // Navigate to home
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
