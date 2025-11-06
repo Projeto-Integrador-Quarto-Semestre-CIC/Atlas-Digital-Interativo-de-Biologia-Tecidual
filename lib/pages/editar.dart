@@ -62,7 +62,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
     final bool isNarrowCheck = MediaQuery.of(context).size.width < breakpoint;
 
     if (!loggedIn) {
-      // Mostra mensagem de acesso restrito quando não autenticado
+      // mensagem de acesso restrito quando não autenticado
       return Scaffold(
         backgroundColor: const Color(0xFF4B5190),
         drawer: isNarrowCheck ? const SidebarDrawer() : null,

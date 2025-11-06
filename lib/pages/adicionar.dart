@@ -9,42 +9,80 @@ class PaginaAdicionar extends StatefulWidget {
 }
 
 class _PaginaAdicionarState extends State<PaginaAdicionar> {
-  final TextEditingController grupoNovoController = TextEditingController();
   final TextEditingController nomeTecidoController = TextEditingController();
   final TextEditingController descTecidoController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String? grupoSelecionado;
 
+  // Corrige erro: tecidosPorGrupo indefinido
+  final Map<String, List<Map<String, String>>> tecidosPorGrupo = {};
   final List<String> grupos = [
     'Grupo 1',
     'Grupo 2',
     'Grupo 3',
   ];
 
-  final Map<String, List<String>> tecidosPorGrupo = {};
+                                    // grupos (full width)                                      
 
   @override
   void dispose() {
-    grupoNovoController.dispose();
     nomeTecidoController.dispose();
     descTecidoController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _adicionarGrupo() {
-    final nome = grupoNovoController.text.trim();
-    if (nome.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Digite um nome para o grupo')));
-      return;
+  Future<void> _mostrarDialogoNovoGrupo() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Novo Grupo'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'Nome do grupo',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              final nome = controller.text.trim();
+              if (nome.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Digite um nome para o grupo')),
+                );
+                return;
+              }
+              if (grupos.contains(nome)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Grupo já existe')),
+                );
+                return;
+              }
+              Navigator.pop(context, nome);
+            },
+            child: const Text('Adicionar'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        grupos.add(result);
+        grupoSelecionado = result; // Seleciona o novo grupo automaticamente
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Grupo adicionado')),
+      );
     }
-    if (grupos.contains(nome)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Grupo já existe')));
-      return;
-    }
-    setState(() {
-      grupos.add(nome);
-      grupoNovoController.clear();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Grupo adicionado (simulado)')));
   }
 
   void _adicionarTecido() {
@@ -58,7 +96,10 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
       return;
     }
     final list = tecidosPorGrupo.putIfAbsent(grupoSelecionado!, () => []);
-    list.add(nome);
+    list.add({
+      'nome': nome,
+      'descricao': descTecidoController.text.trim(),
+    });
     nomeTecidoController.clear();
     descTecidoController.clear();
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tecido adicionado (simulado)')));
@@ -74,11 +115,37 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
           drawer: isNarrow ? const SidebarDrawer() : null,
           appBar: isNarrow
               ? AppBar(
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: const Color.fromARGB(0, 170, 2, 2),
                   elevation: 0,
                   iconTheme: const IconThemeData(color: Colors.white),
                   toolbarHeight: 120,
-                  title: const Center(child: Text('Adicionar', style: TextStyle(color: Colors.white))),
+                  leading: Builder(
+                    builder: (context) {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Scaffold.of(context).openDrawer(),
+                            borderRadius: BorderRadius.circular(10),
+                            splashColor: Colors.white24,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              margin: const EdgeInsets.only(left: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF38853A),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.menu, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  title: const Center(child: BotaoHome(sidebar: false)),
+                  centerTitle: true,
                 )
               : null,
           body: Row(
@@ -87,145 +154,350 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
               Expanded(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1000),
+                    constraints: const BoxConstraints(maxWidth: 800),
                     child: Container(
-                      margin: const EdgeInsets.all(24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(color: const Color(0xFF2FA14A), borderRadius: BorderRadius.circular(16)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 8),
-                          const Center(
-                            child: Text('Adicionar Grupos e Tecidos', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w600)),
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2FA14A),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
-                          const SizedBox(height: 20),
-
-                          // Left column-like layout using rows
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        ],
+                      ),
+                      child: Scrollbar(
+                        controller: _scrollController,
+                        thumbVisibility: true,
+                        thickness: 8,
+                        radius: const Radius.circular(4),
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Lista de grupos (coluna esquerda)
-                              Expanded(
-                                flex: 2,
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                                    onPressed: () => Navigator.pop(context),
+                                    splashRadius: 24,
+                                  ),
+                                  const SizedBox(width: 16),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                          isNarrow
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    // grupos (full width)
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      const Text('Selecione o grupo:'),
-                                      const SizedBox(height: 8),
-                                      SizedBox(
-                                        height: 260,
-                                        child: ListView.separated(
-                                          itemCount: grupos.length,
-                                          separatorBuilder: (_, __) => Divider(color: Colors.green[700]),
-                                          itemBuilder: (context, index) {
-                                            final g = grupos[index];
-                                            return ListTile(
-                                              title: Text(g, style: TextStyle(color: g == grupoSelecionado ? Colors.white : Colors.green[700])),
-                                              tileColor: g == grupoSelecionado ? Colors.green[700] : null,
-                                              onTap: () => setState(() => grupoSelecionado = g),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Row(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
                                         children: [
-                                          Expanded(
-                                            child: TextField(
-                                              controller: grupoNovoController,
-                                              decoration: const InputDecoration(hintText: 'Novo Grupo', filled: true, fillColor: Color(0xFFF8F8F8)),
-                                            ),
+                                          const Text('Selecione o grupo:', 
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF2D2D2D)
+                                            )
                                           ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton(
-                                            onPressed: _adicionarGrupo,
-                                            child: const Icon(Icons.add),
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[50],
+                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(color: Colors.grey[300]!),
+                                            ),
+                                            child: DropdownButton<String>(
+                                              value: grupoSelecionado,
+                                              isExpanded: true,
+                                              hint: const Text('Selecione um grupo'),                                      
+                                              underline: Container(),
+                                              items: [
+                                                ...grupos.map((g) => DropdownMenuItem(
+                                                  value: g,
+                                                  child: Text(g),
+                                                )),
+                                                const DropdownMenuItem(
+                                                  value: 'novo',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.add, color: Color(0xFF2FA14A)),
+                                                      SizedBox(width: 8),
+                                                      Text('Criar novo grupo'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                              onChanged: (value) {
+                                                if (value == 'novo') {
+                                                  _mostrarDialogoNovoGrupo();
+                                                } else {
+                                                  setState(() => grupoSelecionado = value);
+                                                }
+                                              },
+                                            ),
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
+                                    ),
+                                    const SizedBox(height: 12),
 
-                              // Form para adicionar tecido (direita)
-                              Expanded(
-                                flex: 3,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
+                                    // nome do tecido
                                     Container(
                                       padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
                                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                                        const Text('Adicione o nome do tecido:'),
+                                        const Text('Adicione o nome do tecido:'),                                      
                                         const SizedBox(height: 8),
                                         TextField(controller: nomeTecidoController, decoration: const InputDecoration(border: InputBorder.none, isDense: true)),
                                       ]),
                                     ),
                                     const SizedBox(height: 12),
+
+                                    // descricao do tecido
                                     Container(
                                       padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
                                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                                        const Text('Adicione a descrição do tecido:'),
+                                        const Text('Adicione a descrição do tecido:'),                                      
                                         const SizedBox(height: 8),
                                         TextField(controller: descTecidoController, maxLines: 6, decoration: const InputDecoration(border: InputBorder.none, isDense: true)),
                                       ]),
                                     ),
-                                  ],
-                                ),
-                              ),
+                                    const SizedBox(height: 12),
 
-                              const SizedBox(width: 20),
-
-                              // coluna de ações / imagem (direita lateral)
-                              SizedBox(
-                                width: 140,
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      height: 120,
-                                      width: 120,
-                                      margin: const EdgeInsets.only(bottom: 12),
-                                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                                      child: IconButton(
-                                        iconSize: 48,
-                                        onPressed: () {
-                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Inserir imagem (simulado)')));
-                                        },
-                                        icon: const Icon(Icons.file_upload_outlined),
+                                    // imagem
+                                    Center(
+                                      child: Container(
+                                        height: 120,
+                                        width: 120,
+                                        margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                                        child: IconButton(
+                                          iconSize: 48,
+                                          onPressed: () {
+                                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Inserir imagem (simulado)')));
+                                          },
+                                          icon: const Icon(Icons.file_upload_outlined),
+                                        ),
                                       ),
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        _adicionarTecido();
-                                      },
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.greenAccent.shade700, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                                      child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+
+                                    // botoes em linha
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              _adicionarTecido();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.greenAccent.shade700,
+                                              padding: const EdgeInsets.symmetric(vertical: 16),
+                                              minimumSize: const Size.fromHeight(50),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            ),
+                                            child: const Text(
+                                              'Confirmar',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              nomeTecidoController.clear();
+                                              descTecidoController.clear();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              padding: const EdgeInsets.symmetric(vertical: 16),
+                                              minimumSize: const Size.fromHeight(50),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            ),
+                                            child: const Text(
+                                              'Cancelar',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 12),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        // limpar campos
-                                        nomeTecidoController.clear();
-                                        descTecidoController.clear();
-                                      },
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                                      child: const Text('Cancelar'),
+                                  ],
+                                )
+                              : Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Lista de grupos 
+                                    Expanded(
+                                      flex: 2,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: [
+                                            const Text('Selecione o grupo:', style: TextStyle(fontSize: 16)),
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF8F8F8),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: DropdownButton<String>(
+                                                value: grupoSelecionado,
+                                                isExpanded: true,
+                                                hint: const Text('Selecione um grupo'),
+                                                underline: Container(),
+                                                items: [
+                                                  ...grupos.map((g) => DropdownMenuItem(
+                                                    value: g,
+                                                    child: Text(g),
+                                                  )),
+                                                  const DropdownMenuItem(
+                                                    value: 'novo',
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.add, color: Color(0xFF2FA14A)),
+                                                        SizedBox(width: 8),
+                                                        Text('Criar novo grupo'),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                                onChanged: (value) {
+                                                  if (value == 'novo') {
+                                                    _mostrarDialogoNovoGrupo();
+                                                  } else {
+                                                    setState(() => grupoSelecionado = value);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 20),
+
+                                    //adicionar tecido
+                                    Expanded(
+                                      flex: 3,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                                            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                                              const Text('Adicione o nome do tecido:'),
+                                              const SizedBox(height: 8),
+                                              TextField(controller: nomeTecidoController, decoration: const InputDecoration(border: InputBorder.none, isDense: true)),
+                                            ]),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                                            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                                              const Text('Adicione a descrição do tecido:'),
+                                              const SizedBox(height: 8),
+                                              TextField(controller: descTecidoController, maxLines: 6, decoration: const InputDecoration(border: InputBorder.none, isDense: true)),
+                                            ]),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 20),
+
+                                    // coluna de ações / imagem 
+                                    SizedBox(
+                                      width: 140,
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height: 120,
+                                            width: 120,
+                                            margin: const EdgeInsets.only(bottom: 12),
+                                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                                            child: IconButton(
+                                              iconSize: 48,
+                                              onPressed: () {
+                                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Inserir imagem (simulado)')));
+                                              },
+                                              icon: const Icon(Icons.file_upload_outlined),
+                                            ),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              _adicionarTecido();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.greenAccent.shade700,
+                                              padding: const EdgeInsets.symmetric(vertical: 16),
+                                              minimumSize: const Size.fromHeight(50),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            ),
+                                            child: const Text(
+                                              'Confirmar',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              // limpar campos
+                                              nomeTecidoController.clear();
+                                              descTecidoController.clear();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              padding: const EdgeInsets.symmetric(vertical: 16),
+                                              minimumSize: const Size.fromHeight(50),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                            ),
+                                            child: const Text(
+                                              'Cancelar',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
                         ],
+                      ),
+                        ),
                       ),
                     ),
                   ),
