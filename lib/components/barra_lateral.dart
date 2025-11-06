@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app_pii/services/auth.dart';
 
 class BotaoHome extends StatelessWidget {
   final bool? sidebar;
@@ -38,7 +39,6 @@ class BotaoHome extends StatelessWidget {
                 if (Scaffold.of(context).hasDrawer) {
                   Navigator.of(context).pop();
                 }
-                // Navigate to home
                 Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
               },
             child: ClipRRect(
@@ -63,83 +63,109 @@ class _SidebarContent extends StatelessWidget {
     final bool telaGrande = MediaQuery.of(context).size.width >= 800;
 
     return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (telaGrande) const BotaoHome(sidebar: true),
-          Container(
-            decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-            child: TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/login'),
-                icon: const Icon(Icons.person, size: 30, color: Colors.white),
-                label: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("LOGIN PARA EDITORES"),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: Auth.isLoggedIn,
+        builder: (context, loggedIn, _) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (telaGrande) const BotaoHome(sidebar: true),
+              Container(
+                decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+                child: TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    icon: const Icon(Icons.person, size: 30, color: Colors.white),
+                    label: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("LOGIN PARA EDITORES"),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(48),
+                      textStyle: const TextStyle(fontSize: 20),
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                      alignment: Alignment.centerLeft,
+                    )),
+              ),
+              Container(
+                decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+                child: TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/explorar'),
+                    icon: const Icon(Icons.search, size: 30, color: Colors.white),
+                    label: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("EXPLORAR"),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(48),
+                      textStyle: const TextStyle(fontSize: 20),
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                      alignment: Alignment.centerLeft,
+                    )),
+              ),
+              Container(
+                decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+                child: TextButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/contato'),
+                    icon: const Icon(Icons.phone, size: 30, color: Colors.white),
+                    label: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("CONTATO"),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(48),
+                      textStyle: const TextStyle(fontSize: 20),
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                      alignment: Alignment.centerLeft,
+                    )),
+              ),
+              if (loggedIn)
+                Container(
+                  decoration: const BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+                  child: TextButton.icon(
+                      onPressed: () => Navigator.pushNamed(context, '/editar'),
+                      icon: const Icon(Icons.edit, size: 30, color: Colors.white),
+                      label: const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("EDITAR"),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(48),
+                        textStyle: const TextStyle(fontSize: 20),
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        alignment: Alignment.centerLeft,
+                      )),
                 ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  textStyle: const TextStyle(fontSize: 20),
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  alignment: Alignment.centerLeft,
-                )),
-          ),
-          Container(
-            decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-            child: TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/explorar'),
-                icon: const Icon(Icons.search, size: 30, color: Colors.white),
-                label: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("EXPLORAR"),
+
+              if (loggedIn)
+                Container(
+                  decoration: const BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+                  child: TextButton.icon(
+                      onPressed: () => Navigator.pushNamed(context, '/adicionar'),
+                      icon: const Icon(Icons.add_box, size: 30, color: Colors.white),
+                      label: const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("ADICIONAR"),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(48),
+                        textStyle: const TextStyle(fontSize: 20),
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        alignment: Alignment.centerLeft,
+                      )),
                 ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  textStyle: const TextStyle(fontSize: 20),
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  alignment: Alignment.centerLeft,
-                )),
-          ),
-          Container(
-            decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-            child: TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/contato'),
-                icon: const Icon(Icons.phone, size: 30, color: Colors.white),
-                label: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("CONTATO"),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  textStyle: const TextStyle(fontSize: 20),
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  alignment: Alignment.centerLeft,
-                )),
-          ),
-          Container(
-            decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-            child: TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/editar'),
-                icon: const Icon(Icons.edit, size: 30, color: Colors.white),
-                label: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("EDITAR"),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  textStyle: const TextStyle(fontSize: 20),
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  alignment: Alignment.centerLeft,
-                )),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -173,9 +199,6 @@ class SidebarDrawer extends StatelessWidget {
   }
 }
 
-// Backwards-compatible aliases: alguns testes/parts do projeto ainda esperam
-// os nomes antigos `BarraLateral` / `BarraLateralDrawer`. Mantemos aliases
-// leves para não quebrar integrações existentes.
 class BarraLateral extends Sidebar {
   const BarraLateral({super.key, double width = 280}) : super(width: width);
 }

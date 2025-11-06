@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
+import 'package:app_pii/services/auth.dart';
 
-class PaginaLogin extends StatelessWidget {
+class PaginaLogin extends StatefulWidget {
 	const PaginaLogin({super.key});
+
+	@override
+	State<PaginaLogin> createState() => _PaginaLoginState();
+}
+
+class _PaginaLoginState extends State<PaginaLogin> {
+	final TextEditingController usuarioController = TextEditingController();
+	final TextEditingController senhaController = TextEditingController();
 
 	void _mostrarModalResetSenha(BuildContext context) {
 		showDialog(
@@ -72,7 +81,14 @@ class PaginaLogin extends StatelessWidget {
 	}
 
 	@override
-	Widget build(BuildContext context) {
+	void dispose() {
+		usuarioController.dispose();
+		senhaController.dispose();
+		super.dispose();
+	}
+
+		@override
+		Widget build(BuildContext context) {
 		return LayoutBuilder(
 			builder: (context, constraints) {
 				const double breakpoint = 900;
@@ -151,6 +167,7 @@ class PaginaLogin extends StatelessWidget {
 
 																// Campo usuário
 																TextField(
+																	controller: usuarioController,
 																	decoration: InputDecoration(
 																		hintText: 'Usuario:',
 																		filled: true,
@@ -168,6 +185,7 @@ class PaginaLogin extends StatelessWidget {
 
 																// Campo senha
 																TextField(
+																	controller: senhaController,
 																	obscureText: true,
 																	decoration: InputDecoration(
 																		hintText: 'Senha:',
@@ -188,18 +206,25 @@ class PaginaLogin extends StatelessWidget {
 																SizedBox(
 																	width: 160,
 																	child: ElevatedButton(
-																		onPressed: () {
+																		onPressed: () async {
+																		final usuario = usuarioController.text.trim();
+																		final senha = senhaController.text.trim();
+																		final ok = await Auth.login(usuario, senha);
+																		if (ok) {
 																			Navigator.pushNamed(context, '/editar');
-																		},
-																		style: ElevatedButton.styleFrom(
-																			backgroundColor: Colors.white,
-																			shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-																			padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-																			elevation: 2,
-																		),
-																		child: const Text(
-																			'entrar',
-																			style: TextStyle(color: Color(0xFF2FA14A), fontSize: 28, fontWeight: FontWeight.w500),
+																		} else {
+																			ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário/senha inválidos (use admin/admin)')));
+																		}
+																	},
+																	style: ElevatedButton.styleFrom(
+																		backgroundColor: Colors.white,
+																		shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+																		padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+																		elevation: 2,
+																	),
+																	child: const Text(
+																		'entrar',
+																		style: TextStyle(color: Color(0xFF2FA14A), fontSize: 28, fontWeight: FontWeight.w500),
 																		),
 																	),
 																),

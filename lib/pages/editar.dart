@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
+import 'package:app_pii/services/auth.dart';
 
 class PaginaEditar extends StatefulWidget {
   const PaginaEditar({super.key});
@@ -56,6 +57,71 @@ class _PaginaEditarState extends State<PaginaEditar> {
 
   @override
   Widget build(BuildContext context) {
+    final bool loggedIn = Auth.isLoggedIn.value;
+    const double breakpoint = 900;
+    final bool isNarrowCheck = MediaQuery.of(context).size.width < breakpoint;
+
+    if (!loggedIn) {
+      // Mostra mensagem de acesso restrito quando não autenticado
+      return Scaffold(
+        backgroundColor: const Color(0xFF4B5190),
+        drawer: isNarrowCheck ? const SidebarDrawer() : null,
+        appBar: isNarrowCheck
+            ? AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: const IconThemeData(color: Colors.white),
+                toolbarHeight: 120,
+                title: const Center(child: BotaoHome(sidebar: false)),
+              )
+            : null,
+        body: Row(
+          children: [
+            if (!isNarrowCheck) const Sidebar(),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2FA14A),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 8),
+                        const Center(
+                          child: Text(
+                            'Acesso restrito',
+                            style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Você precisa estar logado como editor para acessar esta página.',
+                          style: TextStyle(color: Colors.white70),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pushNamed(context, '/login'),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                          child: const Text('Ir para Login', style: TextStyle(color: Color(0xFF2FA14A))),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         const double breakpoint = 900;
@@ -110,13 +176,12 @@ class _PaginaEditarState extends State<PaginaEditar> {
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Center(
-                      child: Container(
-                        margin: const EdgeInsets.all(24),
-                        padding: const EdgeInsets.all(28),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2FA14A),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        child: Container(
+                          margin: const EdgeInsets.fromLTRB(20, 0, 24, 24),
+                          padding: const EdgeInsets.all(28),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -222,7 +287,6 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                   : Column(
                                       crossAxisAlignment: CrossAxisAlignment.stretch,
                                       children: [
-                                        // topo: voltar
                                         Align(
                                           alignment: Alignment.centerLeft,
                                           child: IconButton(
@@ -237,6 +301,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         const SizedBox(height: 8),
 
                                         // Editar nome do grupo
+
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
@@ -261,12 +326,12 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         ),
                                         const SizedBox(height: 12),
 
-                                        // Excluir grupo (botão)
+                                        // Excluir grupo
+
                                         Align(
                                           alignment: Alignment.centerRight,
                                           child: ElevatedButton(
                                             onPressed: () {
-                                              // ação mínima: limpar seleção
                                               setState(() {
                                                 grupoSelecionado = null;
                                                 passo = 1;
@@ -279,12 +344,13 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                             ),
-                                            child: const Text('Excluir', style: TextStyle(color: Colors.white)),
+                                            child: const Text('Excluir Grupo', style: TextStyle(color: Colors.white)),
                                           ),
                                         ),
                                         const SizedBox(height: 16),
 
-                                        // Selecionar tecido (pequeno dropdown)
+                                        // Selecionar tecido
+
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
@@ -295,7 +361,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.stretch,
                                             children: [
-                                              const Text('Selecionar tecido:'),
+                                              const Text('Selecionar Tecido:'),
                                               const SizedBox(height: 6),
                                               DropdownButtonFormField<String>(
                                                 value: tecidoSelecionado,
@@ -324,6 +390,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         const SizedBox(height: 12),
 
                                         // Excluir tecido
+
                                         Align(
                                           alignment: Alignment.centerRight,
                                           child: ElevatedButton(
@@ -344,6 +411,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         const SizedBox(height: 12),
 
                                         // Editar nome do tecido
+
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
@@ -368,7 +436,43 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         ),
                                         const SizedBox(height: 12),
 
-                                        // Descrição grande
+                                        // Botões de imagem: inserir e remover
+
+                                        Row(
+                                          children: [
+                                            ElevatedButton.icon(
+                                              onPressed: () {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Função de inserir imagem (simulada)')),
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.blue,
+                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                              ),
+                                              icon: const Icon(Icons.image, color: Colors.white),
+                                              label: const Text('Inserir imagem', style: TextStyle(color: Colors.white)),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            ElevatedButton.icon(
+                                              onPressed: () {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Imagem removida (simulado)')),
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red,
+                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                              ),
+                                              icon: const Icon(Icons.delete, color: Colors.white),
+                                              label: const Text('Remover imagem', style: TextStyle(color: Colors.white)),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+
                                         Container(
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
@@ -381,9 +485,10 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                             children: [
                                               const Text('Editar Descrição do tecido:'),
                                               const SizedBox(height: 8),
-                                              TextField(
+                                              TextFormField(
                                                 controller: descricaoController,
-                                                maxLines: 5,
+                                                minLines: 3,
+                                                maxLines: null,
                                                 decoration: const InputDecoration(
                                                   isDense: true,
                                                   contentPadding: EdgeInsets.all(8),
@@ -396,12 +501,12 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         const SizedBox(height: 16),
 
                                         // Ações: Cancelar / Confirmar
+
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
                                             ElevatedButton(
                                               onPressed: () {
-                                                // desfazer e voltar ao passo 1
                                                 setState(() {
                                                   passo = 1;
                                                   tecidoSelecionado = null;
@@ -416,9 +521,10 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                             const SizedBox(width: 12),
                                             ElevatedButton(
                                               onPressed: () {
+
                                                 // Ação de confirmar (ainda sem backend) - apenas simula confirmação
+
                                                 setState(() {
-                                                  // aqui você poderia persistir alterações localmente
                                                 });
                                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alterações confirmadas (simulado)')));
                                               },
