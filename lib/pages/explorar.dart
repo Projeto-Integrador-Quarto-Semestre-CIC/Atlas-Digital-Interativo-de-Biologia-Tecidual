@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
-import 'package:app_pii/components/botao_grupo_tecido.dart';
+import 'package:app_pii/components/botao_tecido.dart';
 
 class PaginaExplorar extends StatelessWidget {
 	const PaginaExplorar({super.key});
@@ -90,11 +90,13 @@ class PaginaExplorar extends StatelessWidget {
                                 mainAxisSpacing: 20.0,
                                 crossAxisSpacing: 20.0,
                                 crossAxisCount: isNarrow ? 2 : 5,
+                                childAspectRatio: isNarrow ? 0.85 : 0.75,
                                 children: [
-                                  BotaoGrupoTecido(
-                                    nomeGrupo: 'Grupo de Tecido X',
+                                  BotaoTecido(
+                                    titulo: 'Grupo de Tecido X',
                                     onTap: () {
                                       // TODO: abrir tela referente ao grupo de tecido
+                                       Navigator.pushNamed(context, '/grupo_tecido');
                                     },
                                   ),
                                 ],
