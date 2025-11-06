@@ -121,6 +121,24 @@ class _SidebarContent extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                 )),
           ),
+          Container(
+            decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+            child: TextButton.icon(
+                onPressed: () => Navigator.pushNamed(context, '/editar'),
+                icon: const Icon(Icons.edit, size: 30, color: Colors.white),
+                label: const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("EDITAR"),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  textStyle: const TextStyle(fontSize: 20),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  alignment: Alignment.centerLeft,
+                )),
+          ),
         ],
       ),
     );

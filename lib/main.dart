@@ -6,6 +6,7 @@ import 'package:app_pii/pages/login.dart';
 import 'package:app_pii/pages/contato.dart';
 import 'package:app_pii/pages/explorar.dart';
 import 'package:app_pii/pages/home.dart';
+import 'package:app_pii/pages/editar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,6 +32,7 @@ Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapi
               referenciasBibliograficas: "Livro 1;\nLivro 2;\nWikipedia;\nSite 1;",
               tileSource: "http://localhost:8000/002_dzi/002.dzi"
             ),
+        '/editar': (context) => const PaginaEditar(),
         '/grupo_tecido': (context) => const PaginaGrupoTecido(),
       },
     );

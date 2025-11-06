@@ -4,6 +4,73 @@ import 'package:app_pii/components/barra_lateral.dart';
 class PaginaLogin extends StatelessWidget {
 	const PaginaLogin({super.key});
 
+	void _mostrarModalResetSenha(BuildContext context) {
+		showDialog(
+			context: context,
+			builder: (BuildContext context) {
+				return AlertDialog(
+					backgroundColor: const Color(0xFF2FA14A),
+					shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+					title: const Text(
+						'Redefinir Senha',
+						style: TextStyle(
+							color: Colors.white,
+							fontSize: 24,
+							fontWeight: FontWeight.w600,
+						),
+					),
+					content: Column(
+						mainAxisSize: MainAxisSize.min,
+						children: [
+							const Text(
+								'Digite seu e-mail para receber o link de redefinição de senha:',
+								style: TextStyle(color: Colors.white),
+							),
+							const SizedBox(height: 16),
+							TextField(
+								decoration: InputDecoration(
+									hintText: 'Email',
+									hintStyle: const TextStyle(color: Color(0xFF2FA14A)),
+									filled: true,
+									fillColor: Colors.white,
+									contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+									border: OutlineInputBorder(
+										borderRadius: BorderRadius.circular(8),
+										borderSide: BorderSide.none,
+									),
+									suffixIcon: const Icon(Icons.email_outlined, color: Color(0xFF2FA14A)),
+								),
+								style: const TextStyle(color: Color(0xFF2FA14A)),
+							),
+						],
+					),
+					actions: [
+						TextButton(
+							onPressed: () => Navigator.of(context).pop(),
+							child: const Text(
+								'Cancelar',
+								style: TextStyle(color: Colors.white70),
+							),
+						),
+						ElevatedButton(
+							onPressed: () {
+								Navigator.of(context).pop();
+							},
+							style: ElevatedButton.styleFrom(
+								backgroundColor: Colors.white,
+								shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+							),
+							child: const Text(
+								'Enviar',
+								style: TextStyle(color: Color(0xFF2FA14A)),
+							),
+						),
+					],
+				);
+			},
+		);
+	}
+
 	@override
 	Widget build(BuildContext context) {
 		return LayoutBuilder(
@@ -122,6 +189,7 @@ class PaginaLogin extends StatelessWidget {
 																	width: 160,
 																	child: ElevatedButton(
 																		onPressed: () {
+																			Navigator.pushNamed(context, '/editar');
 																		},
 																		style: ElevatedButton.styleFrom(
 																			backgroundColor: Colors.white,
@@ -138,7 +206,7 @@ class PaginaLogin extends StatelessWidget {
 
 																const SizedBox(height: 14),
 																TextButton(
-																	onPressed: () {},
+																	onPressed: () => _mostrarModalResetSenha(context),
 																	child: const Text(
 																		'Esqueci a senha',
 																		style: TextStyle(color: Colors.white70, fontSize: 14),
