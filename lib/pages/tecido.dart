@@ -102,7 +102,7 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               height: 48,
                               margin: const EdgeInsets.only(left: 8),
                               decoration: BoxDecoration(
-                                color: Colors.green,
+                                color: Color(0xFF38853A),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(Icons.menu, color: Colors.white),

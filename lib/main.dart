@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_pii/pages/tecido.dart';
+import 'package:app_pii/pages/grupo_tecido.dart';
 import 'package:app_pii/pages/login.dart';
 import 'package:app_pii/pages/contato.dart';
 import 'package:app_pii/pages/explorar.dart';
@@ -34,6 +35,7 @@ Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapi
             ),
         '/editar': (context) => const PaginaEditar(),
         '/adicionar': (context) => const PaginaAdicionar(),
+        '/grupo_tecido': (context) => const PaginaGrupoTecido(),
       },
     );
   }
