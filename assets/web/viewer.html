@@ -12,6 +12,21 @@
       height: 100%;
       background-color: black;
     }
+    .openseadragon-control,
+    .openseadragon-nav-container,
+    .openseadragon-fullscreenControl,
+    #openseadragon [title="Zoom in"],
+    #openseadragon [title="Zoom out"],
+    #openseadragon [title="Go home"],
+    #openseadragon [title="Toggle full page"],
+    #openseadragon img[src*="zoomin_"],
+    #openseadragon img[src*="zoomout_"],
+    #openseadragon img[src*="home_"],
+    #openseadragon img[src*="fullpage_"] {
+      display: none !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
   </style>
 </head>
 <body>
@@ -27,6 +42,14 @@
         console.error('Erro com OpenSeadragon:', event);
       }
     });
+
+    window.osdBridge = {
+      zoomIn: function() { try { viewer.viewport.zoomBy(1.2); viewer.viewport.applyConstraints(); } catch(e) { console.error(e); } },
+      zoomOut: function() { try { viewer.viewport.zoomBy(1/1.2); viewer.viewport.applyConstraints(); } catch(e) { console.error(e); } },
+      home: function() { try { viewer.viewport.goHome(true); } catch(e) { console.error(e); } },
+      setZoom: function(z) { try { viewer.viewport.zoomTo(Number(z)); } catch(e) { console.error(e); } },
+      getZoom: function() { try { return viewer.viewport.getZoom(); } catch(e) { return null; } },
+    }
   </script>
 </body>
 </html>

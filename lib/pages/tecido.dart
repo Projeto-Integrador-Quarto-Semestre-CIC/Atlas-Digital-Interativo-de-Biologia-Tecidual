@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
 import 'package:app_pii/components/viewer.dart'; 
+import 'package:app_pii/components/barra_ferramentas.dart';
+import 'package:webview_windows/webview_windows.dart' as webview_windows;
+import 'package:webview_flutter/webview_flutter.dart';
+import 'dart:math' as math;
+ 
 class PaginaTecido extends StatefulWidget {
   const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
   final String nome;
@@ -51,12 +56,65 @@ class _DescricaoCompleta extends StatelessWidget {
 }
 
 class _PaginaTecidoState extends State<PaginaTecido> {
-  late Widget _viewer;
+   late Widget _viewer;
+   WebViewController? _mobileController;
+   webview_windows.WebviewController? _windowsController;
+   double _zoom = 1.0;
+   final double _minZoom = 0.1;
+   final double _maxZoom = 100.0;
+   bool get _controllersReady => _mobileController != null || _windowsController != null;
+   static const double _breakpoint = 900;
+
+  Future<void> _applyZoom(double zoom) async {
+    final js = '''
+      (function(z){
+        if(window.osdBridge){
+          if(window.osdBridge.setZoom) return window.osdBridge.setZoom(z);
+          if(window.osdBridge.zoomTo) return window.osdBridge.zoomTo(z);
+          if(window.osdBridge.setScale) return window.osdBridge.setScale(z);
+        }
+        return null;
+      })(${zoom.toString()});
+    ''';
+
+    if (_mobileController != null) {
+      await _mobileController!.runJavaScript(js);
+    }
+    if (_windowsController != null) {
+      await _windowsController!.executeScript(js);
+    }
+  }
+
+  double _sliderToZoom(double s) {
+    // zoom = min * (max/min)^s
+    return _minZoom * math.pow(_maxZoom / _minZoom, s);
+  }
+
+  double _zoomToSlider(double z) {
+    return math.log(z / _minZoom) / math.log(_maxZoom / _minZoom);
+  }
+
+  Widget _wrapViewer(BuildContext context, Widget viewer, {double minHeight = 500}) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= _breakpoint) return viewer;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: viewer,
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    _viewer = Viewer(tileSource: widget.tileSource);
+    _viewer = Viewer(
+        tileSource: widget.tileSource,
+        onWebViewCreated: (mobile, windows) {
+          setState(() {
+            _mobileController = mobile;
+            _windowsController = windows;
+          });
+        },
+      );
   }
 
   @override
@@ -64,7 +122,15 @@ class _PaginaTecidoState extends State<PaginaTecido> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.tileSource != widget.tileSource) {
       setState(() {
-        _viewer = Viewer(tileSource: widget.tileSource);
+        _viewer = Viewer(
+          tileSource: widget.tileSource,
+          onWebViewCreated: (mobile, windows) {
+            setState(() {
+              _mobileController = mobile;
+              _windowsController = windows;
+            });
+          },
+        );
       });
     }
   }
@@ -129,7 +195,62 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                           children: [
                             Flexible(
                               flex: 2,
-                              child: _viewer,
+                              child: Column(
+                                  children:[
+                                    Container(
+                                      height: 48,
+                                      color: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      child: Row(
+                                         children: [
+                                           IconButton(
+                                             icon: const Icon(Icons.reply),
+                                             color: const Color(0xFF38853A),
+                                             onPressed: () => Navigator.of(context).maybePop(),
+                                           ),
+                                           SizedBox(width: 8),
+                                           Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                           Expanded(
+                                             child: Center(
+                                               child: Text(
+                                                 widget.nome,
+                                                 style: const TextStyle(
+                                                   fontSize: 24,
+                                                   fontWeight: FontWeight.w600,
+                                                   color: Colors.black87,
+                                                 ),
+                                                 maxLines: 1,
+                                                 overflow: TextOverflow.ellipsis,
+                                               ),
+                                             ),
+                                           ),
+                                           Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                           SizedBox(width: 8),
+                                           IconButton(
+                                             icon: const Icon(Icons.zoom_out_map),
+                                             color: const Color(0xFF38853A),
+                                             onPressed: () {
+                                               // TODO: toggle fullscreen
+                                             },
+                                           ),
+                                         ],
+                                       ),
+                                     ),
+                                    const SizedBox(height: 6),
+                                    Expanded(child: _wrapViewer(context, _viewer)),
+                                     BarraFerramentas(
+                                       initialSlider: _zoomToSlider(_zoom),
+                                       controllersReady: _controllersReady,
+                                       sliderWidth: 160,
+                                       onApplyZoom: (z) => _applyZoom(z),
+                                       onChanged: (s) {
+                                         setState(() {
+                                           _zoom = _sliderToZoom(s);
+                                         });
+                                       },
+                                     ),
+                                  ],
+                              ), 
                             ),
                             const SizedBox(height: 16, width: 20),
                             Flexible(
@@ -147,7 +268,73 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                           children: [
                             Flexible(
                               flex: 3,
-                              child: _viewer,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Container(
+                                    height: 48,
+                                    color: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.reply),
+                                          color: const Color(0xFF38853A),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                          onPressed: () => Navigator.of(context).maybePop(),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                        Expanded(
+                                          child: Center(
+                                            child: Text(
+                                              widget.nome,
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          icon: const Icon(Icons.zoom_out_map),
+                                          color: const Color(0xFF38853A),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                          onPressed: () {
+                                            // TODO: toggle fullscreen
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                   Expanded(
+                                     child: Container(
+                                       color: Colors.white,
+                                       child: _wrapViewer(context, _viewer),
+                                     ),
+                                   ),
+                                    BarraFerramentas(
+                                      initialSlider: _zoomToSlider(_zoom),
+                                      controllersReady: _controllersReady,
+                                      sliderWidth: 160,
+                                      onApplyZoom: (z) => _applyZoom(z),
+                                      onChanged: (s) {
+                                        setState(() {
+                                          _zoom = _sliderToZoom(s);
+                                        });
+                                      },
+                                    ),
+                                ],
+                              ),
                             ),
                             const SizedBox(width: 8),
                             Flexible(

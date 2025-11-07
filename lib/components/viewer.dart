@@ -6,12 +6,14 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_windows/webview_windows.dart' as webview_windows;
 
 class Viewer extends StatefulWidget {
-
   static bool modoTeste = false; // Desabilita o Viewer para não gerar erros nos testes
 
   final String assetPath = 'assets/web/viewer.html';
   final String tileSource;
-  const Viewer({super.key, required this.tileSource}) : super();
+
+  final void Function(WebViewController? mobileController, webview_windows.WebviewController? windowsController)? onWebViewCreated;
+
+  const Viewer({super.key, required this.tileSource, this.onWebViewCreated}) : super();
 
   @override
   State<Viewer> createState() => _ViewerState();
@@ -39,11 +41,19 @@ class _ViewerState extends State<Viewer> {
       await controller.initialize();
       await controller.loadStringContent(htmlString);
       setState(() => _windowsController = controller);
+      widget.onWebViewCreated?.call(null, controller);
     } else {
-      final controller = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..loadRequest(Uri.dataFromString(htmlString, mimeType: 'text/html', encoding: utf8));
+      final controller = WebViewController();
+      controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+      controller.setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) {
+            widget.onWebViewCreated?.call(controller, null);
+          },
+        ),
+      );
       setState(() => _mobileController = controller);
+      await controller.loadRequest(Uri.dataFromString(htmlString, mimeType: 'text/html', encoding: utf8));
     }
   }
 

@@ -65,6 +65,7 @@ class PaginaGrupoTecido extends StatelessWidget {
                     padding: const EdgeInsets.all(32),
                     alignment: Alignment.center,
                     child: Column(
+
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(

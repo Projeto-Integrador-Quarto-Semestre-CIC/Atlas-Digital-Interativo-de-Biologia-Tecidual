@@ -38,7 +38,20 @@ class BotaoTecido extends StatelessWidget {
             ),
             child: LayoutBuilder(builder: (context, constraints) {
               final double maxCellWidth = constraints.maxWidth;
-              final double imageSize = math.min(maxCellWidth, 225);
+              final double maxCellHeight =
+                  constraints.hasBoundedHeight ? constraints.maxHeight : double.infinity;
+              final double verticalPadding =
+                  (padding is EdgeInsets) ? (padding as EdgeInsets).vertical : 16.0;
+              const double estimatedTitleHeight = 44.0;
+              const double spacing = 8.0;
+              final double reservedForText = estimatedTitleHeight + spacing + verticalPadding;
+              final double imageSize = math.max(
+                0.0,
+                math.min(
+                  math.min(maxCellWidth, 225.0),
+                  maxCellHeight == double.infinity ? 225.0 : (maxCellHeight - reservedForText),
+                ),
+              );
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
