@@ -516,7 +516,9 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                                 _scrollController.jumpTo(0);
                                               },
                                               style: ElevatedButton.styleFrom(backgroundColor: Colors.red, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-                                              child: const Text('Cancelar'),
+                                              child: const Text('Cancelar',
+                                                style: TextStyle(color: Colors.white),
+                                              ),
                                             ),
                                             const SizedBox(width: 12),
                                             ElevatedButton(
