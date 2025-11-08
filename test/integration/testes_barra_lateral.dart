@@ -11,6 +11,7 @@ void main() {
     testWidgets('Exibe BarraLateral em telas grandes (>= 900px)',
         (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(1200, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(const MaterialApp(
         home: PaginaTecido(
@@ -23,15 +24,15 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.byType(BarraLateral), findsOneWidget);
-
-      expect(find.byType(BarraLateralDrawer), findsNothing);
+      expect(find.byType(Sidebar), findsOneWidget);
+      expect(find.byType(SidebarDrawer), findsNothing);
       expect(find.byIcon(Icons.menu), findsNothing);
     });
 
     testWidgets('Exibe menu hamburger e abre Drawer em telas pequenas (< 900px)',
         (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(const MaterialApp(
         home: PaginaTecido(
@@ -44,14 +45,14 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.byType(BarraLateral), findsNothing);
+      expect(find.byType(Sidebar), findsNothing);
 
       expect(find.byIcon(Icons.menu), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
 
-      expect(find.byType(BarraLateralDrawer), findsOneWidget);
+      expect(find.byType(SidebarDrawer), findsOneWidget);
 
       expect(find.text('LOGIN PARA EDITORES'), findsOneWidget);
       expect(find.text('EXPLORAR'), findsOneWidget);
