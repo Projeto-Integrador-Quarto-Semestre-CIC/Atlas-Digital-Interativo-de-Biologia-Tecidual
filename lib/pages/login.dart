@@ -213,7 +213,7 @@ class _PaginaLoginState extends State<PaginaLogin> {
 																		if (ok) {
 																			Navigator.pushNamed(context, '/editar');
 																		} else {
-																			ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário/senha inválidos (use admin/admin)')));
+																			ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário/senha inválidos')));
 																		}
 																	},
 																	style: ElevatedButton.styleFrom(

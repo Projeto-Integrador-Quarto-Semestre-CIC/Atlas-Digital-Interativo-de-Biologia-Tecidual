@@ -36,6 +36,13 @@ dependencies:
   cupertino_icons: ^1.0.8
   webview_flutter: ^4.13.0
   webview_windows: ^0.4.0
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  shelf_cors_headers: ^0.1.5
+  mongo_dart: ^0.10.5
+  dotenv: ^4.2.0
+  http: ^1.2.0   # ou versão estável atual
+
 
 dev_dependencies:
   flutter_test:
