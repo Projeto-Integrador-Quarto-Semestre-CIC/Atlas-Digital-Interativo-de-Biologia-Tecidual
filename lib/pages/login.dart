@@ -211,10 +211,16 @@ class _PaginaLoginState extends State<PaginaLogin> {
 																		final senha = senhaController.text.trim();
 																		final ok = await Auth.login(usuario, senha);
 																		if (ok) {
-																			Navigator.pushNamed(context, '/editar');
-																		} else {
+																			if (Auth.currentRole == 'admin') {
+                                      // administrador -> página de gerenciar
+                                      Navigator.pushNamed(context, '/gerenciar');
+                                    } else if (Auth.currentRole == 'professor') {
+                                      // professor -> página de editar
+                                      Navigator.pushNamed(context, '/editar');
+                                    } else {
 																			ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário/senha inválidos')));
 																		}
+                                  }
 																	},
 																	style: ElevatedButton.styleFrom(
 																		backgroundColor: Colors.white,

@@ -39,6 +39,7 @@ Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapi
         '/grupo_tecido': (context) => const PaginaGrupoTecido(),
         '/gerenciar': (context) => const GerenciarProfessoresPage()
       },
+      
     );
   }
 }
