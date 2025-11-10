@@ -6,36 +6,41 @@ import 'package:mongo_dart/mongo_dart.dart';
 class Tecido {
   ObjectId? _id;          // _id do Mongo
   int _idTecido;          // campo "id" lógico
-  int _grupo;             // id do grupo (ajuste para String se precisar)
+  String _grupo;          // nome do grupo (string)
   String _tipo;
+  String _nome;
   String _texto;
   String _imagem;
 
   Tecido({
     ObjectId? idMongo,
     required int idTecido,
-    required int grupo,
+    required String grupo,
     required String tipo,
+    required String nome,
     required String texto,
     required String imagem,
   })  : _id = idMongo,
         _idTecido = idTecido,
         _grupo = grupo,
         _tipo = tipo,
+        _nome = nome,
         _texto = texto,
         _imagem = imagem;
 
   // GETTERS
   ObjectId? get idMongo => _id;
   int get idTecido => _idTecido;
-  int get grupo => _grupo;
+  String get grupo => _grupo;
   String get tipo => _tipo;
+  String get nome => _nome;
   String get texto => _texto;
   String get imagem => _imagem;
 
   // SETTERS (opcionais)
-  set grupo(int v) => _grupo = v;
+  set grupo(String v) => _grupo = v;
   set tipo(String v) => _tipo = v;
+  set nome(String v) => _nome = v;
   set texto(String v) => _texto = v;
   set imagem(String v) => _imagem = v;
 
@@ -46,10 +51,9 @@ class Tecido {
       idTecido: map['id'] is int
           ? map['id']
           : int.parse(map['id'].toString()),
-      grupo: map['grupo'] is int
-          ? map['grupo']
-          : int.parse(map['grupo'].toString()),
+      grupo: map['grupo'].toString(),
       tipo: map['tipo'] as String,
+      nome: map['nome'] as String,
       texto: map['texto'] as String,
       imagem: map['imagem'] as String,
     );
@@ -62,6 +66,7 @@ class Tecido {
       'id': _idTecido,
       'grupo': _grupo,
       'tipo': _tipo,
+      'nome': _nome,
       'texto': _texto,
       'imagem': _imagem,
     };
@@ -98,8 +103,8 @@ class TecidoRepository {
     return doc != null ? Tecido.fromMap(doc) : null;
   }
 
-  // GET: por grupo
-  Future<List<Tecido>> getPorGrupo(int grupo) async {
+  // GET: por grupo (string)
+  Future<List<Tecido>> getPorGrupo(String grupo) async {
     final docs = await _collection.find({'grupo': grupo}).toList();
     return docs.map((d) => Tecido.fromMap(d)).toList();
   }
