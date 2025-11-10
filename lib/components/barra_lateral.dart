@@ -35,7 +35,7 @@ class BotaoHome extends StatelessWidget {
           dimension: 250,
           child: InkWell(
               onTap: () {
-                // Close the drawer if it's open
+                
                 if (Scaffold.of(context).hasDrawer) {
                   Navigator.of(context).pop();
                 }
@@ -154,6 +154,25 @@ class _SidebarContent extends StatelessWidget {
                       label: const Align(
                         alignment: Alignment.centerLeft,
                         child: Text("ADICIONAR"),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(48),
+                        textStyle: const TextStyle(fontSize: 20),
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        alignment: Alignment.centerLeft,
+                      )),
+                ),
+              
+                Container(
+                  decoration: const BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+                  child: TextButton.icon(
+                      onPressed: () => Navigator.pushNamed(context, '/gerenciar'),
+                      icon: const Icon(Icons.list, size: 30, color: Colors.white),
+                      label: const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("GERENCIAR PROF."),
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,

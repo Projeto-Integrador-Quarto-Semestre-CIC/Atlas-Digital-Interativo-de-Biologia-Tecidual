@@ -8,6 +8,7 @@ import 'package:app_pii/pages/explorar.dart';
 import 'package:app_pii/pages/home.dart';
 import 'package:app_pii/pages/editar.dart';
 import 'package:app_pii/pages/adicionar.dart';
+import 'package:app_pii/pages/gerenciar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,6 +37,7 @@ Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapi
         '/editar': (context) => const PaginaEditar(),
         '/adicionar': (context) => const PaginaAdicionar(),
         '/grupo_tecido': (context) => const PaginaGrupoTecido(),
+        '/gerenciar': (context) => const GerenciarProfessoresPage()
       },
     );
   }
