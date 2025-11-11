@@ -1,0 +1,183 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+
+/// DTO simples pra trabalhar com grupos na UI
+class GrupoTecidoData {
+  final int id;
+  final String grupo;
+  final String imagem;
+
+  GrupoTecidoData({
+    required this.id,
+    required this.grupo,
+    required this.imagem,
+  });
+
+  factory GrupoTecidoData.fromMap(Map<String, dynamic> map) {
+    return GrupoTecidoData(
+      id: map['id'] is int ? map['id'] : int.parse(map['id'].toString()),
+      grupo: map['grupo'] as String,
+      imagem: map['imagem'] as String,
+    );
+  }
+}
+
+class TecidosService {
+  // se estiver em emulador Android, trocar localhost por 10.0.2.2
+  static const String _baseUrl = 'http://localhost:3000';
+
+  // ------------ GRUPOS ------------
+  static Future<List<GrupoTecidoData>> buscarGrupos() async {
+    final resp = await http.get(Uri.parse('$_baseUrl/grupos'));
+
+    if (resp.statusCode != 200) {
+      throw Exception(
+        'Erro ao buscar grupos: ${resp.statusCode} - ${resp.body}',
+      );
+    }
+
+    final data = jsonDecode(resp.body) as List;
+    return data
+        .map((e) => GrupoTecidoData.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+  static Future<List<GrupoTecidoData>> listarGrupos() async {
+    final resp = await http.get(Uri.parse('$_baseUrl/grupos'));
+
+    if (resp.statusCode != 200) {
+      throw Exception(
+          'Erro ao buscar grupos: ${resp.statusCode} - ${resp.body}');
+    }
+
+    final data = jsonDecode(resp.body) as List;
+    return data
+        .map((e) => GrupoTecidoData.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  static Future<bool> criarGrupo({
+    required String grupo,
+    required String imagem,
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/grupos'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'grupo': grupo,
+        'imagem': imagem,
+      }),
+    );
+
+    if (resp.statusCode != 200) {
+      print('Erro ao criar grupo: ${resp.statusCode} - ${resp.body}');
+      return false;
+    }
+
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    return data['ok'] == true;
+  }
+
+  // ------------ TIPOS ------------
+
+  /// Busca todos os tecidos de um grupo e devolve os TIPOS distintos
+  static Future<List<String>> listarTiposPorGrupo(String grupo) async {
+    final resp =
+        await http.get(Uri.parse('$_baseUrl/tecidos?grupo=$grupo'));
+
+    if (resp.statusCode != 200) {
+      print('Erro ao buscar tipos: ${resp.statusCode} - ${resp.body}');
+      return [];
+    }
+
+    final data = jsonDecode(resp.body) as List;
+    final setTipos = <String>{};
+    for (final item in data) {
+      final map = item as Map<String, dynamic>;
+      final tipo = map['tipo']?.toString();
+      if (tipo != null && tipo.isNotEmpty) {
+        setTipos.add(tipo);
+      }
+    }
+    return setTipos.toList();
+  }
+  //upload imagem
+  static Future<String?> uploadImagemTecido({
+    required String nomeArquivo,
+    required Uint8List bytes,
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/upload_imagem_tecido'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nome': nomeArquivo,
+        'bytes': base64Encode(bytes),
+      }),
+    );
+
+    if (resp.statusCode != 200) {
+      print('Erro upload imagem tecido: ${resp.statusCode} - ${resp.body}');
+      return null;
+    }
+    
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    if (data['ok'] == true) {
+      return data['path']?.toString();
+    }
+    return null;
+  }
+  static Future<String?> uploadImagemGrupo({
+    required String nomeArquivo,
+    required Uint8List bytes,
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/upload_imagem_grupo'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nome': nomeArquivo,
+        'bytes': base64Encode(bytes),
+      }),
+    );
+
+    if (resp.statusCode != 200) {
+      print('Erro upload imagem grupo: ${resp.statusCode} - ${resp.body}');
+      return null;
+    }
+
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    if (data['ok'] == true) {
+      return data['path']?.toString();
+    }
+    return null;
+  }
+
+  // ------------ TECIDOS ------------
+
+  static Future<bool> criarTecido({
+    required String grupo,
+    required String tipo,
+    required String nome,
+    required String texto,
+    String imagem = '',
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/tecidos'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'grupo': grupo,
+        'tipo': tipo,
+        'nome': nome,
+        'texto': texto,
+        'imagem': imagem,
+      }),
+    );
+
+    if (resp.statusCode != 200) {
+      print('Erro ao criar tecido: ${resp.statusCode} - ${resp.body}');
+      return false;
+    }
+
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    return data['ok'] == true;
+  }
+}

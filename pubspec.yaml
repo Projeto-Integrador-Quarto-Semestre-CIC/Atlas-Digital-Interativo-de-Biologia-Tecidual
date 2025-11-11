@@ -39,10 +39,11 @@ dependencies:
   shelf: ^1.4.1
   shelf_router: ^1.1.4
   shelf_cors_headers: ^0.1.5
+  shelf_static: ^1.1.2
   mongo_dart: ^0.10.5
   dotenv: ^4.2.0
   http: ^1.2.0   # ou versão estável atual
-
+  file_picker: ^8.0.0
 
 dev_dependencies:
   flutter_test:
