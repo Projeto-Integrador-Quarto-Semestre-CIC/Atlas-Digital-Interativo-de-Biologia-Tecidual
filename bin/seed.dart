@@ -1,9 +1,9 @@
 import 'package:mongo_dart/mongo_dart.dart';
 
-import 'administrador.dart';
-import 'professor.dart';
-import 'tecido.dart';
-import 'grupo_tecido.dart';
+import '../lib/models/administrador.dart';
+import '../lib/models/professor.dart';
+import '../lib/models/tecido.dart';
+import '../lib/models/grupo_tecido.dart';
 
 // URL do seu Mongo Atlas
 const mongoUrl =

@@ -1,11 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-const String _baseUrlImagens = 'http://localhost:3000';
-
 class BotaoTecido extends StatelessWidget {
   final String titulo;
-  final String? imagePath;      // pode ser /grupos/..., http..., ou asset
+  final String? imagePath;      // caminho de asset, ex: 'uploads/grupos/arquivo.png'
   final VoidCallback? onTap;
   final double borderRadius;
   final EdgeInsetsGeometry padding;
@@ -22,10 +20,8 @@ class BotaoTecido extends StatelessWidget {
   }) : super(key: key);
 
   Widget _buildImage() {
-    // asset padrão
     const String placeholderAsset = 'assets/images/no_img.png';
 
-    // se não veio nada do banco, usa placeholder
     if (imagePath == null || imagePath!.isEmpty) {
       return Image.asset(
         placeholderAsset,
@@ -33,42 +29,13 @@ class BotaoTecido extends StatelessWidget {
       );
     }
 
-    final String path = imagePath!;
+    final path = imagePath!;
 
-    // se já é URL completa
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return Image.network(
-        path,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            placeholderAsset,
-            fit: BoxFit.contain,
-          );
-        },
-      );
-    }
-
-    // se começa com "/", é caminho do servidor (ex: /grupos/epitelial.png)
-    if (path.startsWith('/')) {
-      final url = '$_baseUrlImagens$path';
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Image.asset(
-            placeholderAsset,
-            fit: BoxFit.contain,
-          );
-        },
-      );
-    }
-
-    // senão, tratamos como asset relativo
     return Image.asset(
       path,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
+        debugPrint('Erro ao carregar asset de imagem ($path): $error');
         return Image.asset(
           placeholderAsset,
           fit: BoxFit.contain,

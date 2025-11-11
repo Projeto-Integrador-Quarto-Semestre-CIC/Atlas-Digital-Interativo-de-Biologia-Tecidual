@@ -60,6 +60,28 @@ class _PaginaExplorarState extends State<PaginaExplorar> {
     super.dispose();
   }
 
+  /// Converte o valor salvo no banco (grupo.imagem) em um caminho de asset.
+  ///
+  /// Exemplos:
+  ///   "/grupos/atividade23.04.png"  -> "uploads/grupos/atividade23.04.png"
+  ///   "grupos/atividade23.04.png"   -> "uploads/grupos/atividade23.04.png"
+  ///   "atividade23.04.png"          -> "uploads/grupos/atividade23.04.png"
+  String _assetPathFromDb(String imagemDb) {
+    if (imagemDb.isEmpty) return '';
+
+    // normaliza barras
+    var path = imagemDb.replaceAll('\\', '/');
+
+    // pega só o nome do arquivo (parte depois da última /)
+    final fileName = path.split('/').last;
+
+    // monta o caminho de asset (igual você testou na Home)
+    final assetPath = 'uploads/grupos/$fileName';
+
+    debugPrint('assetPath calculado para "$imagemDb": $assetPath');
+    return assetPath;
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -119,8 +141,10 @@ class _PaginaExplorarState extends State<PaginaExplorar> {
                         controller: _searchController,
                         trailing: [
                           IconButton(
-                            icon: const Icon(Icons.search,
-                                color: Color(0xFF38853A)),
+                            icon: const Icon(
+                              Icons.search,
+                              color: Color(0xFF38853A),
+                            ),
                             onPressed: () {
                               _filtrar(_searchController.text);
                             },
@@ -140,7 +164,7 @@ class _PaginaExplorarState extends State<PaginaExplorar> {
                       ),
                     ),
 
-                    // Conteúdo: loading / erro / grid
+                    // Conteúdo
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -178,9 +202,17 @@ class _PaginaExplorarState extends State<PaginaExplorar> {
                                         itemBuilder: (context, index) {
                                           final grupo =
                                               _gruposFiltrados[index];
+
+                                          final assetPath =
+                                              _assetPathFromDb(grupo.imagem);
+
+                                          debugPrint(
+                                            'Explorar - grupo "${grupo.grupo}" -> $assetPath',
+                                          );
+
                                           return BotaoTecido(
                                             titulo: grupo.grupo,
-                                            imagePath: grupo.imagem,
+                                            imagePath: assetPath,
                                             onTap: () {
                                               Navigator.pushNamed(
                                                 context,
