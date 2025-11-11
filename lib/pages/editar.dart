@@ -21,13 +21,14 @@ class _PaginaEditarState extends State<PaginaEditar> {
   ];
 
   int passo = 1;
- 
+
   final List<String> tecidos = ['Tecido 1', 'Tecido 2', 'Tecido 3'];
   String? tecidoSelecionado;
 
   late TextEditingController grupoController;
   late TextEditingController tecidoController;
   late TextEditingController descricaoController;
+  late TextEditingController referenciaController; 
 
   late ScrollController _scrollController;
 
@@ -43,6 +44,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
     grupoController = TextEditingController();
     tecidoController = TextEditingController();
     descricaoController = TextEditingController();
+    referenciaController = TextEditingController();
     _scrollController = ScrollController();
   }
 
@@ -51,6 +53,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
     grupoController.dispose();
     tecidoController.dispose();
     descricaoController.dispose();
+    referenciaController.dispose(); 
     _scrollController.dispose();
     super.dispose();
   }
@@ -60,67 +63,6 @@ class _PaginaEditarState extends State<PaginaEditar> {
     final bool loggedIn = Auth.isLoggedIn.value;
     const double breakpoint = 900;
     final bool isNarrowCheck = MediaQuery.of(context).size.width < breakpoint;
-
-    if (!loggedIn) {
-      // mensagem de acesso restrito quando não autenticado
-      return Scaffold(
-        backgroundColor: const Color(0xFF4B5190),
-        drawer: isNarrowCheck ? const SidebarDrawer() : null,
-        appBar: isNarrowCheck
-            ? AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                iconTheme: const IconThemeData(color: Colors.white),
-                toolbarHeight: 120,
-                title: const Center(child: BotaoHome(sidebar: false)),
-              )
-            : null,
-        body: Row(
-          children: [
-            if (!isNarrowCheck) const Sidebar(),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 720),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2FA14A),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 8),
-                        const Center(
-                          child: Text(
-                            'Acesso restrito',
-                            style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Você precisa estar logado como editor para acessar esta página.',
-                          style: TextStyle(color: Colors.white70),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pushNamed(context, '/login'),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                          child: const Text('Ir para Login', style: TextStyle(color: Color(0xFF2FA14A))),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -154,7 +96,8 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                 color: const Color(0xFF38853A),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.menu, color: Colors.white),
+                              child:
+                                  const Icon(Icons.menu, color: Colors.white),
                             ),
                           ),
                         ),
@@ -176,12 +119,12 @@ class _PaginaEditarState extends State<PaginaEditar> {
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Center(
-                        child: Container(
-                          margin: const EdgeInsets.fromLTRB(20, 0, 24, 24),
-                          padding: const EdgeInsets.all(28),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(20, 0, 24, 24),
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -213,64 +156,88 @@ class _PaginaEditarState extends State<PaginaEditar> {
                               ),
                               child: passo == 1
                                   ? Column(
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
                                       children: [
-                                        ...grupos.map((grupo) => Container(
-                                              margin: const EdgeInsets.only(bottom: 1),
-                                              decoration: BoxDecoration(
-                                                border: Border(
-                                                  bottom: BorderSide(
-                                                    color: Colors.green[700]!,
-                                                    width: 1,
-                                                  ),
-                                                ),
-                                              ),
-                                              child: Material(
-                                                color: Colors.transparent,
-                                                child: InkWell(
-                                                  onTap: () => _selecionarGrupo(grupo),
-                                                  child: Container(
-                                                    padding: const EdgeInsets.symmetric(
-                                                      vertical: 16,
-                                                      horizontal: 8,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      color: grupoSelecionado == grupo
-                                                          ? Colors.green[50]
-                                                          : Colors.transparent,
-                                                    ),
-                                                    child: Text(
-                                                      grupo,
-                                                      style: TextStyle(
-                                                        fontSize: 16,
-                                                        color: Colors.green[700],
-                                                        fontWeight: grupoSelecionado == grupo
-                                                            ? FontWeight.w600
-                                                            : FontWeight.normal,
+                                        ...grupos
+                                            .map((grupo) => Container(
+                                                  margin: const EdgeInsets.only(
+                                                      bottom: 1),
+                                                  decoration: BoxDecoration(
+                                                    border: Border(
+                                                      bottom: BorderSide(
+                                                        color:
+                                                            Colors.green[700]!,
+                                                        width: 1,
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                            )).toList(),
+                                                  child: Material(
+                                                    color: Colors.transparent,
+                                                    child: InkWell(
+                                                      onTap: () =>
+                                                          _selecionarGrupo(
+                                                              grupo),
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                          vertical: 16,
+                                                          horizontal: 8,
+                                                        ),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: grupoSelecionado ==
+                                                                  grupo
+                                                              ? Colors
+                                                                  .green[50]
+                                                              : Colors
+                                                                  .transparent,
+                                                        ),
+                                                        child: Text(
+                                                          grupo,
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            color: Colors
+                                                                .green[700],
+                                                            fontWeight: grupoSelecionado ==
+                                                                    grupo
+                                                                ? FontWeight
+                                                                    .w600
+                                                                : FontWeight
+                                                                    .normal,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ))
+                                            .toList(),
                                         const SizedBox(height: 24),
                                         if (grupoSelecionado != null)
                                           ElevatedButton(
                                             onPressed: () {
                                               setState(() {
                                                 passo = 2;
-                                                grupoController.text = grupoSelecionado ?? '';
+                                                grupoController.text =
+                                                    grupoSelecionado ?? '';
                                                 tecidoSelecionado = null;
                                                 tecidoController.text = '';
                                                 descricaoController.text = '';
+                                                referenciaController.text =
+                                                    ''; 
                                                 _scrollController.jumpTo(0);
                                               });
                                             },
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.green[700],
-                                              padding: const EdgeInsets.symmetric(vertical: 16),
+                                              backgroundColor:
+                                                  Colors.green[700],
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 16),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(8),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
                                             ),
                                             child: const Text(
@@ -285,39 +252,46 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                       ],
                                     )
                                   : Column(
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
                                       children: [
                                         Align(
                                           alignment: Alignment.centerLeft,
                                           child: IconButton(
                                             onPressed: () {
                                               setState(() => passo = 1);
-                                              // rolar para topo ao voltar
                                               _scrollController.jumpTo(0);
                                             },
-                                            icon: const Icon(Icons.arrow_back),
+                                            icon:
+                                                const Icon(Icons.arrow_back),
                                           ),
                                         ),
                                         const SizedBox(height: 8),
 
                                         // Editar nome do grupo
-
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: Colors.grey.shade300),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.grey.shade300),
                                           ),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
                                             children: [
                                               const Text('Editar nome do grupo:'),
                                               TextField(
                                                 controller: grupoController,
-                                                decoration: const InputDecoration(
+                                                decoration:
+                                                    const InputDecoration(
                                                   isDense: true,
-                                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                          vertical: 8),
                                                   border: InputBorder.none,
                                                 ),
                                               ),
@@ -325,8 +299,6 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                           ),
                                         ),
                                         const SizedBox(height: 12),
-
-                                        // Excluir grupo
 
                                         Align(
                                           alignment: Alignment.centerRight,
@@ -341,55 +313,81 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                             },
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: Colors.red,
-                                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 12),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
                                             ),
-                                            child: const Text('Excluir Grupo', style: TextStyle(color: Colors.white)),
+                                            child: const Text('Excluir Grupo',
+                                                style: TextStyle(
+                                                    color: Colors.white)),
                                           ),
                                         ),
                                         const SizedBox(height: 16),
 
                                         // Selecionar tecido
-
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: Colors.grey.shade300),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.grey.shade300),
                                           ),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
                                             children: [
                                               const Text('Selecionar Tecido:'),
                                               const SizedBox(height: 6),
                                               DropdownButtonFormField<String>(
                                                 value: tecidoSelecionado,
-                                                items: tecidos.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                                                items: tecidos
+                                                    .map((t) => DropdownMenuItem(
+                                                        value: t,
+                                                        child: Text(t)))
+                                                    .toList(),
                                                 onChanged: (v) {
                                                   setState(() {
                                                     tecidoSelecionado = v;
-                                                    tecidoController.text = v ?? '';
+                                                    tecidoController.text =
+                                                        v ?? '';
                                                   });
                                                 },
                                                 decoration: InputDecoration(
-                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
+                                                  contentPadding:
+                                                      const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 12,
+                                                          vertical: 8),
+                                                  border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              6),
+                                                      borderSide:
+                                                          BorderSide.none),
                                                   filled: true,
-                                                  fillColor: const Color(0xFFF8F8F8),
+                                                  fillColor:
+                                                      const Color(0xFFF8F8F8),
                                                 ),
                                                 isDense: true,
                                               ),
                                               if (tecidoSelecionado != null) ...[
                                                 const SizedBox(height: 8),
-                                                Text(tecidoSelecionado!, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                                Text(tecidoSelecionado!,
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w500)),
                                               ]
                                             ],
                                           ),
                                         ),
                                         const SizedBox(height: 12),
-
-                                        // Excluir tecido
 
                                         Align(
                                           alignment: Alignment.centerRight,
@@ -402,32 +400,45 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                             },
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: Colors.red,
-                                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 12),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
                                             ),
-                                            child: const Text('Excluir tecido', style: TextStyle(color: Colors.white)),
+                                            child: const Text('Excluir tecido',
+                                                style: TextStyle(
+                                                    color: Colors.white)),
                                           ),
                                         ),
                                         const SizedBox(height: 12),
 
                                         // Editar nome do tecido
-
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: Colors.grey.shade300),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.grey.shade300),
                                           ),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
                                             children: [
                                               const Text('Editar nome do tecido:'),
                                               TextField(
                                                 controller: tecidoController,
-                                                decoration: const InputDecoration(
+                                                decoration:
+                                                    const InputDecoration(
                                                   isDense: true,
-                                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                          vertical: 8),
                                                   border: InputBorder.none,
                                                 ),
                                               ),
@@ -436,62 +447,127 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         ),
                                         const SizedBox(height: 12),
 
-                                        // Botões de imagem: inserir e remover
-
+                                        // Botões de imagem
                                         Row(
                                           children: [
                                             ElevatedButton.icon(
                                               onPressed: () {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Função de inserir imagem (simulada)')),
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                      content: Text(
+                                                          'Função de inserir imagem (simulada)')),
                                                 );
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: Colors.blue,
-                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 12),
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8)),
                                               ),
-                                              icon: const Icon(Icons.image, color: Colors.white),
-                                              label: const Text('Inserir imagem', style: TextStyle(color: Colors.white)),
+                                              icon: const Icon(Icons.image,
+                                                  color: Colors.white),
+                                              label: const Text('Inserir imagem',
+                                                  style: TextStyle(
+                                                      color: Colors.white)),
                                             ),
                                             const SizedBox(width: 16),
                                             ElevatedButton.icon(
                                               onPressed: () {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Imagem removida (simulado)')),
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                      content: Text(
+                                                          'Imagem removida (simulado)')),
                                                 );
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: Colors.red,
-                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 20,
+                                                        vertical: 12),
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8)),
                                               ),
-                                              icon: const Icon(Icons.delete, color: Colors.white),
-                                              label: const Text('Remover imagem', style: TextStyle(color: Colors.white)),
+                                              icon: const Icon(Icons.delete,
+                                                  color: Colors.white),
+                                              label: const Text('Remover imagem',
+                                                  style: TextStyle(
+                                                      color: Colors.white)),
                                             ),
                                           ],
                                         ),
                                         const SizedBox(height: 12),
 
+                                        // Editar descrição
                                         Container(
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: Colors.grey.shade300),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.grey.shade300),
                                           ),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
                                             children: [
-                                              const Text('Editar Descrição do tecido:'),
+                                              const Text(
+                                                  'Editar Descrição do tecido:'),
                                               const SizedBox(height: 8),
                                               TextFormField(
                                                 controller: descricaoController,
                                                 minLines: 3,
                                                 maxLines: null,
-                                                decoration: const InputDecoration(
+                                                decoration:
+                                                    const InputDecoration(
                                                   isDense: true,
-                                                  contentPadding: EdgeInsets.all(8),
+                                                  contentPadding:
+                                                      EdgeInsets.all(8),
+                                                  border: InputBorder.none,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+
+                                        // NOVO CAMPO - Referência do tecido
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.grey.shade300),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              const Text(
+                                                  'Editar Referência do tecido:'),
+                                              const SizedBox(height: 8),
+                                              TextFormField(
+                                                controller:
+                                                    referenciaController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  isDense: true,
+                                                  hintText:
+                                                      'Ex: Referências bibliográficas de origem ou link',
+                                                  contentPadding:
+                                                      EdgeInsets.all(8),
                                                   border: InputBorder.none,
                                                 ),
                                               ),
@@ -500,10 +576,10 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                         ),
                                         const SizedBox(height: 16),
 
-                                        // Ações: Cancelar / Confirmar
-
+                                        // Botões Confirmar / Cancelar
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
                                           children: [
                                             ElevatedButton(
                                               onPressed: () {
@@ -512,26 +588,41 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                                   tecidoSelecionado = null;
                                                   tecidoController.text = '';
                                                   descricaoController.text = '';
+                                                  referenciaController.text =
+                                                      ''; 
                                                 });
                                                 _scrollController.jumpTo(0);
                                               },
-                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-                                              child: const Text('Cancelar',
-                                                style: TextStyle(color: Colors.white),
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 12)),
+                                              child: const Text(
+                                                'Cancelar',
+                                                style: TextStyle(
+                                                    color: Colors.white),
                                               ),
                                             ),
                                             const SizedBox(width: 12),
                                             ElevatedButton(
                                               onPressed: () {
-
-                                                // Ação de confirmar (ainda sem backend) - apenas simula confirmação
-
-                                                setState(() {
-                                                });
-                                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alterações confirmadas (simulado)')));
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(const SnackBar(
+                                                        content: Text(
+                                                            'Alterações confirmadas (simulado)')));
                                               },
-                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.greenAccent.shade700, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-                                              child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors
+                                                      .greenAccent.shade700,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 12)),
+                                              child: const Text('Confirmar',
+                                                  style: TextStyle(
+                                                      color: Colors.white)),
                                             ),
                                           ],
                                         ),

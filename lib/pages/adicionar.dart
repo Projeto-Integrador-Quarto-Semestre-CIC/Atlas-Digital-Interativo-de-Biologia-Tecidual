@@ -20,6 +20,9 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
   final TextEditingController _nomeTecidoController = TextEditingController();
   final TextEditingController _descricaoController = TextEditingController();
 
+  // NOVO: campo de referência
+  final TextEditingController _referenciaController = TextEditingController();
+
   List<GrupoTecidoData> _grupos = [];
   List<String> _tipos = [];
 
@@ -72,6 +75,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
   void dispose() {
     _nomeTecidoController.dispose();
     _descricaoController.dispose();
+    _referenciaController.dispose(); // NOVO
     super.dispose();
   }
 
@@ -80,48 +84,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     return ValueListenableBuilder<bool>(
       valueListenable: Auth.isLoggedIn,
       builder: (context, logado, _) {
-        if (!logado) {
-          return Scaffold(
-            backgroundColor: const Color(0xFF44458A),
-            body: Center(
-              child: Card(
-                elevation: 8,
-                margin: const EdgeInsets.symmetric(horizontal: 30),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Você precisa estar logado para acessar esta página.',
-                        style: TextStyle(fontSize: 18),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF38853A),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                        ),
-                        child: const Text('Ir para o login',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 16)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
         return LayoutBuilder(
           builder: (context, constraints) {
             final bool telaGrande = constraints.maxWidth >= 800;
@@ -132,7 +94,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                 children: [
                   if (telaGrande) const BarraLateral(),
 
-                  // CONTEÚDO PRINCIPAL
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(32),
@@ -241,7 +202,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                         }
                                       }
                                     },
-                                    icon: const Icon(Icons.image),
+                                    icon: const Icon(Icons.image,
+                                    color: Colors.white,),
                                     label: const Text(
                                       'Inserir imagem',
                                       style: TextStyle(color: Colors.white),
@@ -260,7 +222,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                         _imagemTecidoNome = null;
                                       });
                                     },
-                                    icon: const Icon(Icons.delete),
+                                    icon: const Icon(Icons.delete,
+                                    color: Colors.white),
                                     label: const Text(
                                       'Remover imagem',
                                       style: TextStyle(color: Colors.white),
@@ -293,6 +256,18 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                 maxLines: 4,
                                 decoration: const InputDecoration(
                                   labelText: 'Descrição do tecido',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // ------- Referência -------
+                              TextField(
+                                controller: _referenciaController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Referência do tecido',
+                                  hintText:
+                                      'Ex: Referência bibliográfica de origem ou link',
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -342,8 +317,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     );
   }
 
-  // ------- Widgets auxiliares -------
-
   Widget _buildDropdown({
     required String label,
     required String? value,
@@ -388,7 +361,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     );
   }
 
-  // Dialog genérico simples (usar para Tipo)
   void _mostrarDialogSimples({
     required String titulo,
     required Function(String texto) onConfirmar,
@@ -422,7 +394,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     );
   }
 
-  // Dialog específico para GRUPO: nome + seleção de imagem (thumb)
   void _mostrarDialogAdicionarGrupo() {
     final nomeCtrl = TextEditingController();
     _imagemGrupoBytes = null;
@@ -558,7 +529,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
 
     String imagemPath = '';
 
-    // Se tiver imagem selecionada pro tecido, faz upload primeiro
     if (_imagemTecidoBytes != null && _imagemTecidoNome != null) {
       final path = await TecidosService.uploadImagemTecido(
         nomeArquivo: _imagemTecidoNome!,
@@ -593,9 +563,9 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
       setState(() {
         _nomeTecidoController.clear();
         _descricaoController.clear();
+        _referenciaController.clear();
         _imagemTecidoBytes = null;
         _imagemTecidoNome = null;
-        // se quiser manter grupo e tipo selecionados, não zera
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

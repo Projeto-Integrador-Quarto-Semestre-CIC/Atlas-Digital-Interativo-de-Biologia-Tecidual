@@ -6,14 +6,14 @@ class BotaoHome extends StatelessWidget {
   const BotaoHome({super.key, this.sidebar});
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     final bool isSidebar = sidebar ?? (MediaQuery.of(context).size.width >= 800);
 
     if (isSidebar) {
       return TextButton(
-          onPressed: () {
-            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-          },
+        onPressed: () {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        },
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(130),
@@ -34,13 +34,12 @@ class BotaoHome extends StatelessWidget {
         child: SizedBox.square(
           dimension: 250,
           child: InkWell(
-              onTap: () {
-                
-                if (Scaffold.of(context).hasDrawer) {
-                  Navigator.of(context).pop();
-                }
-                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-              },
+            onTap: () {
+              if (Scaffold.of(context).hasDrawer) {
+                Navigator.of(context).pop();
+              }
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
@@ -52,7 +51,7 @@ class BotaoHome extends StatelessWidget {
         ),
       ),
     );
-  } 
+  }
 }
 
 class _SidebarContent extends StatelessWidget {
@@ -61,6 +60,39 @@ class _SidebarContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool telaGrande = MediaQuery.of(context).size.width >= 800;
+    final String? currentRoute = ModalRoute.of(context)?.settings.name;
+
+    // Função auxiliar para criar botões com destaque da rota atual
+    Widget buildSidebarButton({
+      required String label,
+      required String route,
+      required IconData icon,
+    }) {
+      final bool isActive = currentRoute == route;
+      return Container(
+        decoration: BoxDecoration(
+          border: const Border(bottom: BorderSide(color: Colors.white, width: 2)),
+          color: isActive ? const Color(0xFF2E6C33) : Colors.transparent,
+        ),
+        child: TextButton.icon(
+          onPressed: () {
+            if (!isActive) Navigator.pushNamed(context, route);
+          },
+          icon: Icon(icon, size: 30, color: Colors.white),
+          label: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(label),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(48),
+            textStyle: const TextStyle(fontSize: 20),
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            alignment: Alignment.centerLeft,
+          ),
+        ),
+      );
+    }
 
     return SafeArea(
       child: ValueListenableBuilder<bool>(
@@ -70,118 +102,41 @@ class _SidebarContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (telaGrande) const BotaoHome(sidebar: true),
-              Container(
-                decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-                child: TextButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/login'),
-                    icon: const Icon(Icons.person, size: 30, color: Colors.white),
-                    label: const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("LOGIN PARA EDITORES"),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(48),
-                      textStyle: const TextStyle(fontSize: 20),
-                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                      alignment: Alignment.centerLeft,
-                    )),
-              ),
-              Container(
-                decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-                child: TextButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/explorar'),
-                    icon: const Icon(Icons.search, size: 30, color: Colors.white),
-                    label: const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("EXPLORAR"),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(48),
-                      textStyle: const TextStyle(fontSize: 20),
-                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                      alignment: Alignment.centerLeft,
-                    )),
-              ),
-              Container(
-                decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-                child: TextButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/contato'),
-                    icon: const Icon(Icons.phone, size: 30, color: Colors.white),
-                    label: const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("CONTATO"),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(48),
-                      textStyle: const TextStyle(fontSize: 20),
-                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                      alignment: Alignment.centerLeft,
-                    )),
-              ),
-              if (loggedIn)
-                Container(
-                  decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-                  child: TextButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, '/editar'),
-                      icon: const Icon(Icons.edit, size: 30, color: Colors.white),
-                      label: const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("EDITAR"),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
-                        textStyle: const TextStyle(fontSize: 20),
-                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                        alignment: Alignment.centerLeft,
-                      )),
-                ),
 
-              if (loggedIn)
-                Container(
-                  decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-                  child: TextButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, '/adicionar'),
-                      icon: const Icon(Icons.add_box, size: 30, color: Colors.white),
-                      label: const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("ADICIONAR"),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
-                        textStyle: const TextStyle(fontSize: 20),
-                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                        alignment: Alignment.centerLeft,
-                      )),
+              buildSidebarButton(
+                label: 'LOGIN PARA EDITORES',
+                route: '/login',
+                icon: Icons.person,
+              ),
+              buildSidebarButton(
+                label: 'EXPLORAR',
+                route: '/explorar',
+                icon: Icons.search,
+              ),
+              buildSidebarButton(
+                label: 'CONTATO',
+                route: '/contato',
+                icon: Icons.phone,
+              ),
+
+              // Estes só aparecem se o usuário estiver logado
+              if (loggedIn) ...[
+                buildSidebarButton(
+                  label: 'EDITAR',
+                  route: '/editar',
+                  icon: Icons.edit,
                 ),
-              
-                Container(
-                  decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
-                  child: TextButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, '/gerenciar'),
-                      icon: const Icon(Icons.list, size: 30, color: Colors.white),
-                      label: const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("GERENCIAR PROF."),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
-                        textStyle: const TextStyle(fontSize: 20),
-                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                        alignment: Alignment.centerLeft,
-                      )),
+                buildSidebarButton(
+                  label: 'ADICIONAR',
+                  route: '/adicionar',
+                  icon: Icons.add_box,
                 ),
+                buildSidebarButton(
+                  label: 'GERENCIAR PROF.',
+                  route: '/gerenciar',
+                  icon: Icons.list,
+                ),
+              ],
             ],
           );
         },
