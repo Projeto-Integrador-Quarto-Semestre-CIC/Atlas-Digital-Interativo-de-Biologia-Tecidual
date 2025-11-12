@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../components/barra_lateral.dart';
+import '../services/professores_service.dart';
 
 class GerenciarProfessoresPage extends StatefulWidget {
   const GerenciarProfessoresPage({super.key});
@@ -10,29 +12,43 @@ class GerenciarProfessoresPage extends StatefulWidget {
 }
 
 class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
-  final List<Map<String, String>> professores = [
-    {
-      "nome": "Aaaaaaaaaaaa Aaaaaaaaaaaaaaaa",
-      "email": "aaa@email.com",
-      "senha": "123456"
-    },
-    {
-      "nome": "Bbbbbbbbbbbb Bbbbbbbbbbbbbb",
-      "email": "bbb@email.com",
-      "senha": "abcdef"
-    },
-    {
-      "nome": "Ccccccc Cccccccccccc Ccccccccc",
-      "email": "ccc@email.com",
-      "senha": "q2er7y"
-    },
-  ];
+  final List<ProfessorData> _professores = [];
+  bool _carregando = true;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarProfessores();
+  }
 
   bool _emailValido(String email) {
     return RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email);
   }
 
-  // Modal de adicionar professor
+  Future<void> _carregarProfessores() async {
+    setState(() {
+      _carregando = true;
+      _erro = null;
+    });
+
+    try {
+      final lista = await ProfessoresService.listarProfessores();
+      setState(() {
+        _professores
+          ..clear()
+          ..addAll(lista);
+        _carregando = false;
+      });
+    } catch (e) {
+      setState(() {
+        _erro = 'Erro ao carregar professores: $e';
+        _carregando = false;
+      });
+    }
+  }
+
+  // ================= MODAL ADICIONAR =================
   void _mostrarModalAdicionar(BuildContext context) {
     final nomeController = TextEditingController();
     final emailController = TextEditingController();
@@ -59,7 +75,8 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                     children: [
                       TextFormField(
                         controller: nomeController,
-                        decoration: const InputDecoration(labelText: "Nome"),
+                        decoration:
+                            const InputDecoration(labelText: "Nome"),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Digite o nome';
@@ -69,7 +86,8 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                       ),
                       TextFormField(
                         controller: emailController,
-                        decoration: const InputDecoration(labelText: "E-mail"),
+                        decoration:
+                            const InputDecoration(labelText: "E-mail"),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Digite o e-mail';
@@ -136,18 +154,31 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                       style: TextStyle(color: Colors.black)),
                 ),
                 TextButton(
-                  onPressed: () {
-                    if (formKey.currentState!.validate()) {
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
+
+                    try {
+                      final novo = await ProfessoresService.criarProfessor(
+                        nome: nomeController.text,
+                        email: emailController.text,
+                        senha: senhaController.text,
+                      );
+
                       setState(() {
-                        professores.add({
-                          "nome": nomeController.text,
-                          "email": emailController.text,
-                          "senha": senhaController.text,
-                        });
+                        _professores.add(novo);
                       });
+
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Professor adicionado!')),
+                        const SnackBar(
+                            content: Text('Professor adicionado!')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erro ao adicionar: $e'),
+                          backgroundColor: Colors.red,
+                        ),
                       );
                     }
                   },
@@ -162,14 +193,13 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
     );
   }
 
-  // Modal de editar professor
+  // ================= MODAL EDITAR =================
   void _mostrarModalEditar(BuildContext context, int index) {
-    final nomeController =
-        TextEditingController(text: professores[index]["nome"]);
-    final emailController =
-        TextEditingController(text: professores[index]["email"]);
-    final senhaController =
-        TextEditingController(text: professores[index]["senha"]);
+    final professor = _professores[index];
+
+    final nomeController = TextEditingController(text: professor.nome);
+    final emailController = TextEditingController(text: professor.email);
+    final senhaController = TextEditingController(text: professor.senha);
     final formKey = GlobalKey<FormState>();
     bool obscureSenha = false;
 
@@ -189,7 +219,8 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                     children: [
                       TextFormField(
                         controller: nomeController,
-                        decoration: const InputDecoration(labelText: "Nome"),
+                        decoration:
+                            const InputDecoration(labelText: "Nome"),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Digite o nome';
@@ -199,7 +230,8 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                       ),
                       TextFormField(
                         controller: emailController,
-                        decoration: const InputDecoration(labelText: "E-mail"),
+                        decoration:
+                            const InputDecoration(labelText: "E-mail"),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Digite o e-mail';
@@ -243,18 +275,35 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                       style: TextStyle(color: Colors.black)),
                 ),
                 TextButton(
-                  onPressed: () {
-                    if (formKey.currentState!.validate()) {
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
+
+                    final atualizado = ProfessorData(
+                      id: professor.id,
+                      nome: nomeController.text,
+                      email: emailController.text,
+                      senha: senhaController.text,
+                    );
+
+                    try {
+                      final resp = await ProfessoresService
+                          .atualizarProfessor(atualizado);
+
                       setState(() {
-                        professores[index] = {
-                          "nome": nomeController.text,
-                          "email": emailController.text,
-                          "senha": senhaController.text,
-                        };
+                        _professores[index] = resp;
                       });
+
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Professor atualizado!')),
+                        const SnackBar(
+                            content: Text('Professor atualizado!')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erro ao atualizar: $e'),
+                          backgroundColor: Colors.red,
+                        ),
                       );
                     }
                   },
@@ -268,6 +317,8 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
       },
     );
   }
+
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +362,6 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
               centerTitle: true,
             ),
       drawer: telaGrande ? null : const SidebarDrawer(),
-
       body: Row(
         children: [
           if (telaGrande) const Sidebar(),
@@ -333,7 +383,6 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Botão de adicionar professor
                     Align(
                       alignment: Alignment.center,
                       child: ElevatedButton.icon(
@@ -355,82 +404,126 @@ class _GerenciarProfessoresPageState extends State<GerenciarProfessoresPage> {
                     ),
 
                     const SizedBox(height: 40),
-                    ...List.generate(professores.length, (index) {
-                      final professor = professores[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+
+                    if (_carregando)
+                      const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
                         ),
-                        child: ListTile(
-                          leading: const Icon(Icons.person,
-                              size: 40, color: Colors.black87),
-                          title: Text(
-                            professor["nome"]!,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
+                      )
+                    else if (_erro != null)
+                      Center(
+                        child: Text(
+                          _erro!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    else if (_professores.isEmpty)
+                      const Center(
+                        child: Text(
+                          'Nenhum professor cadastrado.',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      )
+                    else
+                      ...List.generate(_professores.length, (index) {
+                        final professor = _professores[index];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            leading: const Icon(Icons.person,
+                                size: 40, color: Colors.black87),
+                            title: Text(
+                              professor.nome,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              professor.email,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            trailing: Wrap(
+                              spacing: 12,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.black),
+                                  onPressed: () =>
+                                      _mostrarModalEditar(context, index),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.black),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text(
+                                              "Confirmar exclusão"),
+                                          content: Text(
+                                            "Tem certeza que deseja excluir o professor \"${professor.nome}\"?",
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                              child: const Text("Cancelar",
+                                                  style: TextStyle(
+                                                      color: Colors.black)),
+                                            ),
+                                            TextButton(
+                                              onPressed: () async {
+                                                try {
+                                                  await ProfessoresService
+                                                      .excluirProfessor(
+                                                          professor.id);
+                                                  setState(() {
+                                                    _professores
+                                                        .removeAt(index);
+                                                  });
+                                                  Navigator.of(context).pop();
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(SnackBar(
+                                                    content: Text(
+                                                        'Professor "${professor.nome}" excluído'),
+                                                  ));
+                                                } catch (e) {
+                                                  Navigator.of(context).pop();
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(SnackBar(
+                                                    content: Text(
+                                                        'Erro ao excluir: $e'),
+                                                    backgroundColor:
+                                                        Colors.red,
+                                                  ));
+                                                }
+                                              },
+                                              child: const Text("Excluir",
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ),
-                          subtitle: Text(professor["email"]!,
-                              style: const TextStyle(color: Colors.grey)),
-                          trailing: Wrap(
-                            spacing: 12,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit,
-                                    color: Colors.black),
-                                onPressed: () =>
-                                    _mostrarModalEditar(context, index),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.black),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title:
-                                            const Text("Confirmar exclusão"),
-                                        content: Text(
-                                            "Tem certeza que deseja excluir o professor \"${professor["nome"]}\"?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(),
-                                            child: const Text("Cancelar",
-                                                style: TextStyle(
-                                                    color: Colors.black)),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                professores.removeAt(index);
-                                              });
-                                              Navigator.of(context).pop();
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                content: Text(
-                                                    'Professor "${professor["nome"]}" excluído'),
-                                              ));
-                                            },
-                                            child: const Text("Excluir",
-                                                style: TextStyle(
-                                                    color: Colors.red)),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      }),
                   ],
                 ),
               ),

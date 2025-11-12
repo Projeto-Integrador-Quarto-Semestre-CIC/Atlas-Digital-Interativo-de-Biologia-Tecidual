@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:app_pii/components/botao_tecido.dart';
 
 class CardTipoTecido extends StatefulWidget {
   final String titulo;
@@ -19,7 +18,8 @@ class CardTipoTecido extends StatefulWidget {
   State<CardTipoTecido> createState() => _CardTipoTecidoState();
 }
 
-class _CardTipoTecidoState extends State<CardTipoTecido> with TickerProviderStateMixin {
+class _CardTipoTecidoState extends State<CardTipoTecido>
+    with TickerProviderStateMixin {
   late bool _expanded;
   late final AnimationController _rotateController;
 
@@ -61,12 +61,14 @@ class _CardTipoTecidoState extends State<CardTipoTecido> with TickerProviderStat
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Cabeçalho (título + seta)
             Material(
               color: Colors.white,
               child: InkWell(
                 onTap: _toggle,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   child: Row(
                     children: [
                       Expanded(
@@ -80,7 +82,9 @@ class _CardTipoTecidoState extends State<CardTipoTecido> with TickerProviderStat
                         ),
                       ),
                       RotationTransition(
-                        turns: _rotateController.drive(Tween(begin: 0.0, end: 0.5)),
+                        turns: _rotateController.drive(
+                          Tween(begin: 0.0, end: 0.5),
+                        ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -95,6 +99,8 @@ class _CardTipoTecidoState extends State<CardTipoTecido> with TickerProviderStat
                 ),
               ),
             ),
+
+            // linha verde
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
@@ -102,6 +108,8 @@ class _CardTipoTecidoState extends State<CardTipoTecido> with TickerProviderStat
               width: double.infinity,
               color: const Color(0xFF38853A),
             ),
+
+            // Conteúdo expandido (vem TODO de fora)
             AnimatedSize(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeInOut,
@@ -112,57 +120,12 @@ class _CardTipoTecidoState extends State<CardTipoTecido> with TickerProviderStat
                     : const BoxConstraints(maxHeight: 0.0),
                 child: Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  child: widget.expandedChild ?? //dps remover ao implementar backend. Se n tem nada, mostrar apenas "Em construção..."
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: MediaQuery.of(context).size.width >= 800 ? 4 : 2,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: MediaQuery.of(context).size.width >= 800 ? 0.85 : 0.75,
-                        children: [
-                          BotaoTecido(
-                            titulo: 'Tecido X',
-                            corTitulo:Colors.black,
-                            onTap: () {
-                              // TODO: abrir tela referente ao tecido
-                                Navigator.pushNamed(context, '/tecido');
-                            },
-                          ),
-                          BotaoTecido(
-                            titulo: 'Tecido Y',
-                            corTitulo:Colors.black,
-                            onTap: () {
-                              // TODO: abrir tela referente ao tecido
-                                Navigator.pushNamed(context, '/tecido');
-                            },
-                          ),
-                          BotaoTecido(
-                            titulo: 'Tecido Z',
-                            corTitulo:Colors.black,
-                            onTap: () {
-                              // TODO: abrir tela referente ao tecido
-                                Navigator.pushNamed(context, '/tecido');
-                            },
-                          ),
-                          BotaoTecido(
-                            titulo: 'Tecido ALFA',
-                            corTitulo:Colors.black,
-                            onTap: () {
-                              // TODO: abrir tela referente ao tecido
-                                Navigator.pushNamed(context, '/tecido');
-                            },
-                          ),
-                          BotaoTecido(
-                            titulo: 'Tecido BETA',
-                            corTitulo:Colors.black,
-                            onTap: () {
-                              // TODO: abrir tela referente ao tecido
-                                Navigator.pushNamed(context, '/tecido');
-                            },
-                          ),
-                        ],
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: widget.expandedChild ??
+                      const Text(
+                        'Nenhum tecido cadastrado para este tipo.',
+                        textAlign: TextAlign.center,
                       ),
                 ),
               ),

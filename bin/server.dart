@@ -13,6 +13,7 @@ import 'package:app_pii/backend/routes/auth_routes.dart';
 import 'package:app_pii/backend/routes/tecido_routes.dart';
 import 'package:app_pii/backend/routes/grupo_routes.dart';
 import 'package:app_pii/backend/routes/upload_routes.dart';
+import 'package:app_pii/backend/routes/professor_routes.dart';
 
 Future<void> main() async {
   // 1) Conecta no Mongo
@@ -34,6 +35,8 @@ Future<void> main() async {
   registerTecidoRoutes(router);
   registerGrupoRoutes(router);
   registerUploadRoutes(router);
+  registerProfessorRoutes(router);
+
 
   // 5) Static handler (arquivos em /uploads)
   final staticHandler = shelf_static.createStaticHandler(

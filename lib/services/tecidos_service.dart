@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class GrupoTecidoData {
   final int id;
   final String grupo;
-  final String imagem; // caminho bruto vindo do backend (ex: "/grupos/arquivo.png" ou "")
+  final String imagem;
 
   GrupoTecidoData({
     required this.id,
@@ -22,48 +22,62 @@ class GrupoTecidoData {
     );
   }
 
-  /// URL final da imagem para usar no Flutter.
-  /// - Se já for URL completa (http/https), retorna como está.
-  /// - Se for caminho relativo ("/grupos/arquivo.png"), prefixa com a base da API.
-  String get imagemUrl {
+  /// Caminho de asset para a imagem do GRUPO (se você estiver usando assets).
+  String get imagemAssetPath {
     if (imagem.isEmpty) return '';
-
-    // já é URL completa
-    if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
-      return imagem;
-    }
-
-    // normaliza barras
     var path = imagem.replaceAll('\\', '/');
+    final fileName = path.split('/').last;
+    return 'uploads/grupos/$fileName';
+  }
+}
 
-    // garante que começa com "/"
-    if (!path.startsWith('/')) {
-      path = '/$path';
-    }
+/// DTO pra trabalhar com TECIDOS na UI
+class TecidoData {
+  final int id;
+  final String grupo;
+  final String tipo;
+  final String nome;
+  final String texto;
+  final String imagem;
 
-    // codifica espaços e caracteres especiais no caminho
-    final encodedPath = Uri.encodeFull(path);
+  TecidoData({
+    required this.id,
+    required this.grupo,
+    required this.tipo,
+    required this.nome,
+    required this.texto,
+    required this.imagem,
+  });
 
-    return '${TecidosService.apiBaseUrl}$encodedPath';
+  factory TecidoData.fromMap(Map<String, dynamic> map) {
+    return TecidoData(
+      id: map['id'] is int ? map['id'] : int.parse(map['id'].toString()),
+      grupo: map['grupo']?.toString() ?? '',
+      tipo: map['tipo']?.toString() ?? '',
+      nome: map['nome']?.toString() ?? '',
+      texto: map['texto']?.toString() ?? '',
+      imagem: map['imagem']?.toString() ?? '',
+    );
+  }
+
+  /// Caminho de asset para a imagem do TECIDO (se estiver usando assets).
+  String get imagemAssetPath {
+    if (imagem.isEmpty) return '';
+    var path = imagem.replaceAll('\\', '/');
+    final fileName = path.split('/').last;
+    return 'uploads/tecidos/$fileName';
   }
 }
 
 class TecidosService {
-  /// URL base da API.
-  ///
-  /// ⚠️ IMPORTANTE:
-  /// - Se for Flutter Web / Desktop rodando no mesmo PC:  'http://localhost:3000'
-  /// - Se for emulador Android:                          'http://10.0.2.2:3000'
-  /// - Se for celular físico:                            'http://IP_DA_SUA_MAQUINA:3000'
+  /// Se estiver em Web/desktop no mesmo PC do servidor:
   static const String apiBaseUrl = 'http://localhost:3000';
+  // Emulador Android: 'http://10.0.2.2:3000'
 
   static const String _baseUrl = apiBaseUrl;
 
-  // ============================================================
-  // GRUPOS
-  // ============================================================
+  // ================== GRUPOS ==================
 
-  /// Lista todos os grupos de tecido.
   static Future<List<GrupoTecidoData>> listarGrupos() async {
     final resp = await http.get(Uri.parse('$_baseUrl/grupos'));
 
@@ -79,12 +93,10 @@ class TecidosService {
         .toList();
   }
 
-  /// Alias para manter compatibilidade com código antigo (se você usava buscarGrupos).
   static Future<List<GrupoTecidoData>> buscarGrupos() {
     return listarGrupos();
   }
 
-  /// Cria um novo grupo de tecido.
   static Future<bool> criarGrupo({
     required String grupo,
     required String imagem,
@@ -107,11 +119,9 @@ class TecidosService {
     return data['ok'] == true;
   }
 
-  // ============================================================
-  // TIPOS
-  // ============================================================
+  // ================== TIPOS ==================
 
-  /// Busca todos os tecidos de um grupo e devolve os TIPOS distintos.
+  /// devolve apenas os nomes dos tipos de um grupo
   static Future<List<String>> listarTiposPorGrupo(String grupo) async {
     final resp =
         await http.get(Uri.parse('$_baseUrl/tecidos?grupo=$grupo'));
@@ -135,12 +145,26 @@ class TecidosService {
     return setTipos.toList();
   }
 
-  // ============================================================
-  // UPLOAD DE IMAGENS
-  // ============================================================
+  /// BUSCA TODOS os TECIDOS de um grupo.
+  static Future<List<TecidoData>> listarTecidosPorGrupo(
+      String grupo) async {
+    final resp =
+        await http.get(Uri.parse('$_baseUrl/tecidos?grupo=$grupo'));
 
-  /// Faz upload da imagem de TECIDO e retorna o caminho salvo no backend
-  /// (ex.: "/grupos/arquivo.png") ou null em caso de erro.
+    if (resp.statusCode != 200) {
+      throw Exception(
+        'Erro ao buscar tecidos: ${resp.statusCode} - ${resp.body}',
+      );
+    }
+
+    final data = jsonDecode(resp.body) as List;
+    return data
+        .map((e) => TecidoData.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  // ================== UPLOAD IMAGENS ==================
+
   static Future<String?> uploadImagemTecido({
     required String nomeArquivo,
     required Uint8List bytes,
@@ -166,8 +190,6 @@ class TecidosService {
     return null;
   }
 
-  /// Faz upload da imagem de GRUPO e retorna o caminho salvo no backend
-  /// (ex.: "/grupos/arquivo.png") ou null em caso de erro.
   static Future<String?> uploadImagemGrupo({
     required String nomeArquivo,
     required Uint8List bytes,
@@ -193,11 +215,8 @@ class TecidosService {
     return null;
   }
 
-  // ============================================================
-  // TECIDOS
-  // ============================================================
+  // ================== TECIDOS ==================
 
-  /// Cria um novo tecido.
   static Future<bool> criarTecido({
     required String grupo,
     required String tipo,
