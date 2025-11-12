@@ -37,14 +37,13 @@ Future<void> main() async {
   registerUploadRoutes(router);
   registerProfessorRoutes(router);
 
-
   // 5) Static handler (arquivos em /uploads)
   final staticHandler = shelf_static.createStaticHandler(
     'uploads',
     defaultDocument: null,
     listDirectories: false,
   );
-
+  router.mount('/uploads/', staticHandler);
   // 6) Middlewares + cascade
   final handler = Cascade()
       .add(staticHandler)

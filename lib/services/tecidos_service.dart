@@ -21,7 +21,10 @@ class GrupoTecidoData {
       imagem: map['imagem']?.toString() ?? '',
     );
   }
-
+  String get imagemUrl {
+    if (imagem.isEmpty) return '';
+    return TecidosService.urlFromRelative(imagem);
+  }
   /// Caminho de asset para a imagem do GRUPO (se você estiver usando assets).
   String get imagemAssetPath {
     if (imagem.isEmpty) return '';
@@ -48,7 +51,10 @@ class TecidoData {
     required this.texto,
     required this.imagem,
   });
-
+ String get imagemUrl {
+    if (imagem.isEmpty) return '';
+    return TecidosService.urlFromRelative(imagem);
+  }
   factory TecidoData.fromMap(Map<String, dynamic> map) {
     return TecidoData(
       id: map['id'] is int ? map['id'] : int.parse(map['id'].toString()),
@@ -75,7 +81,11 @@ class TecidosService {
   // Emulador Android: 'http://10.0.2.2:3000'
 
   static const String _baseUrl = apiBaseUrl;
-
+  static String urlFromRelative(String path) {
+    final p = path.replaceAll('\\', '/');
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    return '$apiBaseUrl/$p?ts=$ts'; // cache-buster
+  }
   // ================== GRUPOS ==================
 
   static Future<List<GrupoTecidoData>> listarGrupos() async {
@@ -97,27 +107,29 @@ class TecidosService {
     return listarGrupos();
   }
 
-  static Future<bool> criarGrupo({
-    required String grupo,
-    required String imagem,
-  }) async {
-    final resp = await http.post(
-      Uri.parse('$_baseUrl/grupos'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'grupo': grupo,
-        'imagem': imagem,
-      }),
-    );
+ static Future<bool> criarGrupo({
+  required String grupo,
+  required String imagem,
+}) async {
+  final resp = await http.post(
+    Uri.parse('$_baseUrl/grupos'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'grupo': grupo,
+      'imagem': imagem,
+    }),
+  );
 
-    if (resp.statusCode != 200) {
-      print('Erro ao criar grupo: ${resp.statusCode} - ${resp.body}');
-      return false;
-    }
-
-    final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    return data['ok'] == true;
+  if (resp.statusCode != 200) {
+    print('Erro ao criar grupo: ${resp.statusCode} - ${resp.body}');
+    return false;
   }
+
+  final data = jsonDecode(resp.body) as Map<String, dynamic>;
+  return data['ok'] == true; // espera { ok: true, grupo: {...} }
+}
+
+  
 
   // ================== TIPOS ==================
 
@@ -244,4 +256,51 @@ class TecidosService {
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
     return data['ok'] == true;
   }
+
+
+  // GRUPOS
+static Future<void> excluirGrupo(int idGrupo) async {
+  final resp = await http.delete(Uri.parse('$_baseUrl/grupos/$idGrupo'));
+  if (resp.statusCode != 200) {
+    throw Exception('Erro ao excluir grupo: ${resp.statusCode} - ${resp.body}');
+  }
+}
+
+static Future<void> atualizarGrupo(GrupoTecidoData grupo) async {
+  final resp = await http.put(
+    Uri.parse('$_baseUrl/grupos/${grupo.id}'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'grupo': grupo.grupo, 'imagem': grupo.imagem}),
+  );
+  if (resp.statusCode != 200) {
+    throw Exception('Erro ao atualizar grupo: ${resp.statusCode} - ${resp.body}');
+  }
+}
+
+// TECIDOS
+static Future<void> excluirTecido(int idTecido) async {
+  final resp = await http.delete(Uri.parse('$_baseUrl/tecidos/$idTecido'));
+  if (resp.statusCode != 200) {
+    throw Exception('Erro ao excluir tecido: ${resp.statusCode} - ${resp.body}');
+  }
+}
+
+static Future<TecidoData> atualizarTecido(TecidoData t) async {
+  final resp = await http.put(
+    Uri.parse('$_baseUrl/tecidos/${t.id}'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'grupo': t.grupo,
+      'tipo': t.tipo,
+      'nome': t.nome,
+      'texto': t.texto,
+      'imagem': t.imagem,
+    }),
+  );
+  if (resp.statusCode != 200) {
+    throw Exception('Erro ao atualizar tecido: ${resp.statusCode} - ${resp.body}');
+  }
+  final data = jsonDecode(resp.body) as Map<String, dynamic>;
+  return TecidoData.fromMap(data);
+}
 }

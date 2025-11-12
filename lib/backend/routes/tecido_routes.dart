@@ -1,85 +1,172 @@
+// lib/backend/routes/tecido_routes.dart
 import 'dart:convert';
-
-import 'package:mongo_dart/mongo_dart.dart' show where;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
+import 'package:mongo_dart/mongo_dart.dart' show where;
 
-import 'package:app_pii/models/tecido.dart';
-import 'package:app_pii/backend/db.dart'; // para usar `database`
+import 'package:app_pii/backend/db.dart';          // final Db database;
+import 'package:app_pii/models/tecido.dart';       // Tecido + TecidoRepository
+
+const _jsonHeaders = {'Content-Type': 'application/json'};
+
+Map<String, dynamic> _tecidoToJson(Tecido t) => {
+  'id': t.idTecido,
+  'grupo': t.grupo,
+  'tipo': t.tipo,
+  'nome': t.nome,
+  'texto': t.texto,
+  'imagem': t.imagem,
+};
 
 void registerTecidoRoutes(Router router) {
-  
-  // POST /tecidos – criar novo tecido
-  router.post('/tecidos', (Request req) async {
-    final bodyStr = await req.readAsString();
-    final body = jsonDecode(bodyStr) as Map<String, dynamic>;
+  final repo = TecidoRepository(database);
 
-    final grupo = (body['grupo'] ?? '').toString();
-    final tipo = (body['tipo'] ?? '').toString();
-    final nome = (body['nome'] ?? '').toString();
-    final texto = (body['texto'] ?? '').toString();
-    final imagem = (body['imagem'] ?? '').toString(); // pode ser vazio
+  // GET /tecidos?grupo=ABC
+  router.get('/tecidos', (Request req) async {
+    try {
+      final grupo = req.requestedUri.queryParameters['grupo'];
+      final list = (grupo != null && grupo.isNotEmpty)
+          ? await repo.getPorGrupo(grupo)
+          : await repo.getTodos();
 
-    if (grupo.isEmpty || tipo.isEmpty || nome.isEmpty) {
-      return Response(
-        400,
-        body: jsonEncode({
-          'ok': false,
-          'message': 'grupo, tipo e nome são obrigatórios',
-        }),
-        headers: {'Content-Type': 'application/json'},
+      return Response.ok(jsonEncode(list.map(_tecidoToJson).toList()), headers: _jsonHeaders);
+    } catch (e, st) {
+      print('GET /tecidos erro: $e\n$st');
+      return Response.internalServerError(
+        body: jsonEncode({'ok': false, 'message': 'Erro ao listar tecidos'}),
+        headers: _jsonHeaders,
       );
     }
-
-    final repo = TecidoRepository(database);
-
-    // gerar novo idTecido
-    final coll = database.collection('tecidos');
-
-    final lastDoc = await coll.findOne(where.sortBy('id', descending: true));
-
-    int novoId = 1;
-    if (lastDoc != null) {
-      final lastId = lastDoc['id'];
-      novoId = (lastId is int ? lastId : int.parse(lastId.toString())) + 1;
-    }
-
-    final tecido = Tecido(
-      idTecido: novoId,
-      grupo: grupo,
-      tipo: tipo,
-      nome: nome,
-      texto: texto,
-      imagem: imagem,
-    );
-
-    await repo.inserir(tecido);
-
-    return Response.ok(
-      jsonEncode({'ok': true, 'id': novoId}),
-      headers: {'Content-Type': 'application/json'},
-    );
   });
 
-  // GET /tecidos – lista (opcionalmente filtrando por grupo)
-  router.get('/tecidos', (Request req) async {
-    final params = req.requestedUri.queryParameters;
-    final grupo = params['grupo'];
+  // GET /tecidos/<id> (id lógico)
+  router.get('/tecidos/<id>', (Request req, String id) async {
+    try {
+      final idTecido = int.tryParse(id);
+      if (idTecido == null) {
+        return Response(400, body: jsonEncode({'ok': false, 'message': 'ID inválido'}), headers: _jsonHeaders);
+      }
 
-    final repo = TecidoRepository(database);
-    List<Tecido> tecidos;
+      final t = await repo.getPorIdTecido(idTecido);
+      if (t == null) {
+        return Response(404, body: jsonEncode({'ok': false, 'message': 'Tecido não encontrado'}), headers: _jsonHeaders);
+      }
 
-    if (grupo != null && grupo.isNotEmpty) {
-      tecidos = await repo.getPorGrupo(grupo);
-    } else {
-      tecidos = await repo.getTodos();
+      return Response.ok(jsonEncode(_tecidoToJson(t)), headers: _jsonHeaders);
+    } catch (e, st) {
+      print('GET /tecidos/<id> erro: $e\n$st');
+      return Response.internalServerError(
+        body: jsonEncode({'ok': false, 'message': 'Erro ao buscar tecido'}),
+        headers: _jsonHeaders,
+      );
     }
+  });
 
-    final jsonList = tecidos.map((t) => t.toMap()).toList();
+  // POST /tecidos  {grupo, tipo, nome, texto, imagem}
+  router.post('/tecidos', (Request req) async {
+    try {
+      final body = jsonDecode(await req.readAsString()) as Map<String, dynamic>;
+      final grupo  = (body['grupo'] ?? '').toString().trim();
+      final tipo   = (body['tipo']  ?? '').toString().trim();
+      final nome   = (body['nome']  ?? '').toString().trim();
+      final texto  = (body['texto'] ?? '').toString();
+      final imagem = (body['imagem'] ?? '').toString();
 
-    return Response.ok(
-      jsonEncode(jsonList),
-      headers: {'Content-Type': 'application/json'},
+      if (grupo.isEmpty || tipo.isEmpty || nome.isEmpty) {
+        return Response(400,
+          body: jsonEncode({'ok': false, 'message': 'grupo, tipo e nome são obrigatórios'}),
+          headers: _jsonHeaders,
+        );
+      }
+
+      // id lógico incremental
+      final coll = database.collection('tecidos');
+      final last = await coll.findOne(where.sortBy('id', descending: true));
+      final novoId = (last == null)
+          ? 1
+          : ((last['id'] is int) ? last['id'] as int : int.parse(last['id'].toString())) + 1;
+
+      final novo = Tecido(
+        idTecido: novoId,
+        grupo: grupo,
+        tipo: tipo,
+        nome: nome,
+        texto: texto,
+        imagem: imagem,
+      );
+
+      await repo.inserir(novo);
+        return Response.ok(jsonEncode({
+      'ok': true,
+      'tecido': _tecidoToJson(novo),}),headers: _jsonHeaders,
     );
+
+    } catch (e, st) {
+      print('POST /tecidos erro: $e\n$st');
+      return Response.internalServerError(
+        body: jsonEncode({'ok': false, 'message': 'Erro ao criar tecido'}),
+        headers: _jsonHeaders,
+      );
+    }
+  });
+
+  // PUT /tecidos/<id>  {grupo?, tipo?, nome?, texto?, imagem?}
+  router.put('/tecidos/<id>', (Request req, String id) async {
+    try {
+      final idTecido = int.tryParse(id);
+      if (idTecido == null) {
+        return Response(400, body: jsonEncode({'ok': false, 'message': 'ID inválido'}), headers: _jsonHeaders);
+      }
+
+      final atual = await repo.getPorIdTecido(idTecido);
+      if (atual == null || atual.idMongo == null) {
+        return Response(404, body: jsonEncode({'ok': false, 'message': 'Tecido não encontrado'}), headers: _jsonHeaders);
+      }
+
+      final body = jsonDecode(await req.readAsString()) as Map<String, dynamic>;
+
+      final novo = Tecido(
+        idMongo: atual.idMongo,
+        idTecido: atual.idTecido,
+        grupo:  (body['grupo']  ?? atual.grupo).toString().trim(),
+        tipo:   (body['tipo']   ?? atual.tipo).toString().trim(),
+        nome:   (body['nome']   ?? atual.nome).toString().trim(),
+        texto:  (body['texto']  ?? atual.texto).toString(),
+        imagem: (body['imagem'] ?? atual.imagem).toString(),
+      );
+
+      await repo.atualizar(atual.idMongo!.toHexString(), novo);
+      return Response.ok(jsonEncode(_tecidoToJson(novo)), headers: _jsonHeaders);
+    } catch (e, st) {
+      print('PUT /tecidos/<id> erro: $e\n$st');
+      return Response.internalServerError(
+        body: jsonEncode({'ok': false, 'message': 'Erro ao atualizar tecido'}),
+        headers: _jsonHeaders,
+      );
+    }
+  });
+
+  // DELETE /tecidos/<id>
+  router.delete('/tecidos/<id>', (Request req, String id) async {
+    try {
+      final idTecido = int.tryParse(id);
+      if (idTecido == null) {
+        return Response(400, body: jsonEncode({'ok': false, 'message': 'ID inválido'}), headers: _jsonHeaders);
+      }
+
+      final t = await repo.getPorIdTecido(idTecido);
+      if (t == null || t.idMongo == null) {
+        return Response(404, body: jsonEncode({'ok': false, 'message': 'Tecido não encontrado'}), headers: _jsonHeaders);
+      }
+
+      await repo.deletar(t.idMongo!.toHexString());
+      return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
+    } catch (e, st) {
+      print('DELETE /tecidos/<id> erro: $e\n$st');
+      return Response.internalServerError(
+        body: jsonEncode({'ok': false, 'message': 'Erro ao excluir tecido'}),
+        headers: _jsonHeaders,
+      );
+    }
   });
 }

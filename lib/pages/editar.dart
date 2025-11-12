@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
 import 'package:app_pii/services/auth.dart';
+import 'package:app_pii/services/tecidos_service.dart';
 
 class PaginaEditar extends StatefulWidget {
   const PaginaEditar({super.key});
@@ -10,634 +11,423 @@ class PaginaEditar extends StatefulWidget {
 }
 
 class _PaginaEditarState extends State<PaginaEditar> {
-  String? grupoSelecionado;
-  final List<String> grupos = [
-    'Grupo 1',
-    'Grupo 2',
-    'Grupo 3',
-    'Grupo 4',
-    'Grupo 5',
-    'Grupo 6',
-  ];
+  // Seleções atuais
+  String? _grupoSelecionado; // nome do grupo
+  String? _tipoSelecionado;  // nome do tipo
 
-  int passo = 1;
+  // Dados carregados
+  List<GrupoTecidoData> _grupos = [];
+  List<String> _tipos = [];
+  List<TecidoData> _tecidosDoGrupo = [];
 
-  final List<String> tecidos = ['Tecido 1', 'Tecido 2', 'Tecido 3'];
-  String? tecidoSelecionado;
+  // Tecido em edição (do grupo/tipo selecionados)
+  TecidoData? _tecidoSelecionado;
 
-  late TextEditingController grupoController;
-  late TextEditingController tecidoController;
-  late TextEditingController descricaoController;
-  late TextEditingController referenciaController; 
+  // Controllers
+  final _nomeCtrl = TextEditingController();
+  final _descricaoCtrl = TextEditingController();
 
-  late ScrollController _scrollController;
-
-  void _selecionarGrupo(String grupo) {
-    setState(() {
-      grupoSelecionado = grupo;
-    });
-  }
+  // Estados de carregamento/erro
+  bool _loadingGrupos = true;
+  String? _erroGrupos;
+  bool _loadingTipos = false;
+  bool _loadingTecido = false;
 
   @override
   void initState() {
     super.initState();
-    grupoController = TextEditingController();
-    tecidoController = TextEditingController();
-    descricaoController = TextEditingController();
-    referenciaController = TextEditingController();
-    _scrollController = ScrollController();
+    _carregarGrupos();
   }
 
   @override
   void dispose() {
-    grupoController.dispose();
-    tecidoController.dispose();
-    descricaoController.dispose();
-    referenciaController.dispose(); 
-    _scrollController.dispose();
+    _nomeCtrl.dispose();
+    _descricaoCtrl.dispose();
     super.dispose();
   }
 
+  // ----- Carregamentos -----
+
+  Future<void> _carregarGrupos() async {
+    setState(() {
+      _loadingGrupos = true;
+      _erroGrupos = null;
+      _grupos = [];
+      _grupoSelecionado = null;
+      _tipoSelecionado = null;
+      _tipos = [];
+      _tecidosDoGrupo = [];
+      _tecidoSelecionado = null;
+      _nomeCtrl.clear();
+      _descricaoCtrl.clear();
+    });
+
+    try {
+      final grupos = await TecidosService.listarGrupos();
+      if (!mounted) return;
+      setState(() {
+        _grupos = grupos;
+        _loadingGrupos = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadingGrupos = false;
+        _erroGrupos = 'Erro ao carregar grupos: $e';
+      });
+    }
+  }
+
+  Future<void> _onSelecionarGrupo(String? grupo) async {
+    setState(() {
+      _grupoSelecionado = grupo;
+      _tipoSelecionado = null;
+      _tipos = [];
+      _tecidosDoGrupo = [];
+      _tecidoSelecionado = null;
+      _nomeCtrl.clear();
+      _descricaoCtrl.clear();
+      _loadingTipos = true;
+    });
+
+    if (grupo == null) {
+      setState(() => _loadingTipos = false);
+      return;
+    }
+
+    try {
+      final tipos = await TecidosService.listarTiposPorGrupo(grupo);
+      final tecidos = await TecidosService.listarTecidosPorGrupo(grupo);
+      if (!mounted) return;
+      setState(() {
+        _tipos = tipos;
+        _tecidosDoGrupo = tecidos;
+        _loadingTipos = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingTipos = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar tipos/tecidos: $e')),
+      );
+    }
+  }
+
+  Future<void> _onSelecionarTipo(String? tipo) async {
+    setState(() {
+      _tipoSelecionado = tipo;
+      _tecidoSelecionado = null;
+      _nomeCtrl.clear();
+      _descricaoCtrl.clear();
+      _loadingTecido = true;
+    });
+
+    if (tipo == null) {
+      setState(() => _loadingTecido = false);
+      return;
+    }
+
+    // Pega o primeiro tecido daquele tipo dentro do grupo selecionado
+    final t = _tecidosDoGrupo.where((x) => x.tipo == tipo).toList();
+    if (t.isEmpty) {
+      // Não existe tecido para esse tipo → mantém campos vazios (edição desabilitada)
+      setState(() {
+        _loadingTecido = false;
+        _tecidoSelecionado = null;
+        _nomeCtrl.text = '';
+        _descricaoCtrl.text = '';
+      });
+      return;
+    }
+
+    final selecionado = t.first;
+    setState(() {
+      _tecidoSelecionado = selecionado;
+      _nomeCtrl.text = selecionado.nome;
+      _descricaoCtrl.text = selecionado.texto;
+      _loadingTecido = false;
+    });
+  }
+
+  // ----- Ações -----
+
+  Future<void> _confirmarEdicao() async {
+    final t = _tecidoSelecionado;
+    if (t == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum tecido carregado para editar.')),
+      );
+      return;
+    }
+
+    try {
+      // cria uma cópia atualizada só com os campos que mudam
+      final atualizado = TecidoData(
+        id: t.id,
+        grupo: t.grupo,                 // mantém
+        tipo: t.tipo,                   // mantém
+        nome: _nomeCtrl.text.trim(),    // altera
+        texto: _descricaoCtrl.text.trim(), // altera
+        imagem: t.imagem,               // mantém
+      );
+
+      final salvo = await TecidosService.atualizarTecido(atualizado);
+
+      if (!mounted) return;
+      setState(() {
+        _tecidoSelecionado = salvo;
+        final i = _tecidosDoGrupo.indexWhere((x) => x.id == salvo.id);
+        if (i >= 0) _tecidosDoGrupo[i] = salvo;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tecido atualizado com sucesso!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao atualizar tecido: $e')),
+      );
+    }
+  }
+
+  Future<void> _excluirTecido() async {
+    final t = _tecidoSelecionado;
+    if (t == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um tecido para excluir.')),
+      );
+      return;
+    }
+
+    final conf = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir tecido'),
+        content: Text('Excluir o tecido "${t.nome}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Excluir')),
+        ],
+      ),
+    );
+
+    if (conf != true) return;
+
+    try {
+      await TecidosService.excluirTecido(t.id);
+      if (!mounted) return;
+      setState(() {
+        _tecidosDoGrupo.removeWhere((x) => x.id == t.id);
+        _tecidoSelecionado = null;
+        _nomeCtrl.clear();
+        _descricaoCtrl.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tecido excluído.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao excluir tecido: $e')),
+      );
+    }
+  }
+
+  Future<void> _excluirGrupoSelecionado() async {
+    final gNome = _grupoSelecionado;
+    if (gNome == null) return;
+
+    final g = _grupos.firstWhere(
+      (x) => x.grupo == gNome,
+      orElse: () => GrupoTecidoData(id: -1, grupo: gNome, imagem: ''),
+    );
+    if (g.id == -1) return;
+
+    final conf = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir grupo'),
+        content: Text('Excluir o grupo "$gNome" e seus tecidos?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Excluir')),
+        ],
+      ),
+    );
+
+    if (conf != true) return;
+
+    try {
+      await TecidosService.excluirGrupo(g.id);
+      if (!mounted) return;
+      await _carregarGrupos();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Grupo excluído.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha ao excluir grupo: $e')),
+      );
+    }
+  }
+
+  // ----- UI -----
+
   @override
   Widget build(BuildContext context) {
-    final bool loggedIn = Auth.isLoggedIn.value;
-    const double breakpoint = 900;
-    final bool isNarrowCheck = MediaQuery.of(context).size.width < breakpoint;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const double breakpoint = 900;
-        final isNarrow = constraints.maxWidth < breakpoint;
-
-        return Scaffold(
-          backgroundColor: const Color(0xFF4B5190),
-          drawer: isNarrow ? const SidebarDrawer() : null,
-          appBar: isNarrow
-              ? AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  iconTheme: const IconThemeData(color: Colors.white),
-                  toolbarHeight: 120,
-                  leading: Builder(
-                    builder: (context) {
-                      return Align(
-                        alignment: Alignment.centerLeft,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => Scaffold.of(context).openDrawer(),
-                            borderRadius: BorderRadius.circular(10),
-                            splashColor: Colors.white24,
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              margin: const EdgeInsets.only(left: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF38853A),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child:
-                                  const Icon(Icons.menu, color: Colors.white),
-                            ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: Auth.isLoggedIn,
+      builder: (context, logado, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final bool telaGrande = constraints.maxWidth >= 800;
+            return Scaffold(
+              backgroundColor: const Color(0xFF44458A),
+              drawer: telaGrande ? null : const BarraLateralDrawer(),
+              body: Row(
+                children: [
+                  if (telaGrande) const BarraLateral(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(32),
+                      child: Center(
+                        child: Container(
+                          width: 900,
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  title: const Center(child: BotaoHome(sidebar: false)),
-                  centerTitle: true,
-                )
-              : null,
-          body: Row(
-            children: [
-              if (!isNarrow) const Sidebar(),
-              Expanded(
-                child: Scrollbar(
-                  controller: _scrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Center(
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(20, 0, 24, 24),
-                        padding: const EdgeInsets.all(28),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (passo == 1)
-                              const Text(
-                                'Selecione o grupo que deseja editar:',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 38,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            const SizedBox(height: 40),
-                            Container(
-                              constraints: const BoxConstraints(maxWidth: 900),
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // ------ Selecionar Grupo + Deletar ------
+                              if (_loadingGrupos)
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: CircularProgressIndicator(),
                                   ),
-                                ],
-                              ),
-                              child: passo == 1
-                                  ? Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        ...grupos
-                                            .map((grupo) => Container(
-                                                  margin: const EdgeInsets.only(
-                                                      bottom: 1),
-                                                  decoration: BoxDecoration(
-                                                    border: Border(
-                                                      bottom: BorderSide(
-                                                        color:
-                                                            Colors.green[700]!,
-                                                        width: 1,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  child: Material(
-                                                    color: Colors.transparent,
-                                                    child: InkWell(
-                                                      onTap: () =>
-                                                          _selecionarGrupo(
-                                                              grupo),
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                          vertical: 16,
-                                                          horizontal: 8,
-                                                        ),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: grupoSelecionado ==
-                                                                  grupo
-                                                              ? Colors
-                                                                  .green[50]
-                                                              : Colors
-                                                                  .transparent,
-                                                        ),
-                                                        child: Text(
-                                                          grupo,
-                                                          style: TextStyle(
-                                                            fontSize: 16,
-                                                            color: Colors
-                                                                .green[700],
-                                                            fontWeight: grupoSelecionado ==
-                                                                    grupo
-                                                                ? FontWeight
-                                                                    .w600
-                                                                : FontWeight
-                                                                    .normal,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
+                                )
+                              else if (_erroGrupos != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: Text(_erroGrupos!, style: const TextStyle(color: Colors.red)),
+                                )
+                              else
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _grupoSelecionado,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Selecionar Grupo',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        items: _grupos
+                                            .map((g) => DropdownMenuItem(
+                                                  value: g.grupo,
+                                                  child: Text(g.grupo),
                                                 ))
                                             .toList(),
-                                        const SizedBox(height: 24),
-                                        if (grupoSelecionado != null)
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                passo = 2;
-                                                grupoController.text =
-                                                    grupoSelecionado ?? '';
-                                                tecidoSelecionado = null;
-                                                tecidoController.text = '';
-                                                descricaoController.text = '';
-                                                referenciaController.text =
-                                                    ''; 
-                                                _scrollController.jumpTo(0);
-                                              });
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.green[700],
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 16),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              'Próximo',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    )
-                                  : Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: IconButton(
-                                            onPressed: () {
-                                              setState(() => passo = 1);
-                                              _scrollController.jumpTo(0);
-                                            },
-                                            icon:
-                                                const Icon(Icons.arrow_back),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-
-                                        // Editar nome do grupo
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                                color: Colors.grey.shade300),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              const Text('Editar nome do grupo:'),
-                                              TextField(
-                                                controller: grupoController,
-                                                decoration:
-                                                    const InputDecoration(
-                                                  isDense: true,
-                                                  contentPadding:
-                                                      EdgeInsets.symmetric(
-                                                          vertical: 8),
-                                                  border: InputBorder.none,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                grupoSelecionado = null;
-                                                passo = 1;
-                                                grupoController.text = '';
-                                              });
-                                              _scrollController.jumpTo(0);
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 12),
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8)),
-                                            ),
-                                            child: const Text('Excluir Grupo',
-                                                style: TextStyle(
-                                                    color: Colors.white)),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-
-                                        // Selecionar tecido
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                                color: Colors.grey.shade300),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              const Text('Selecionar Tecido:'),
-                                              const SizedBox(height: 6),
-                                              DropdownButtonFormField<String>(
-                                                value: tecidoSelecionado,
-                                                items: tecidos
-                                                    .map((t) => DropdownMenuItem(
-                                                        value: t,
-                                                        child: Text(t)))
-                                                    .toList(),
-                                                onChanged: (v) {
-                                                  setState(() {
-                                                    tecidoSelecionado = v;
-                                                    tecidoController.text =
-                                                        v ?? '';
-                                                  });
-                                                },
-                                                decoration: InputDecoration(
-                                                  contentPadding:
-                                                      const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 12,
-                                                          vertical: 8),
-                                                  border: OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              6),
-                                                      borderSide:
-                                                          BorderSide.none),
-                                                  filled: true,
-                                                  fillColor:
-                                                      const Color(0xFFF8F8F8),
-                                                ),
-                                                isDense: true,
-                                              ),
-                                              if (tecidoSelecionado != null) ...[
-                                                const SizedBox(height: 8),
-                                                Text(tecidoSelecionado!,
-                                                    style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w500)),
-                                              ]
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                tecidoSelecionado = null;
-                                                tecidoController.text = '';
-                                              });
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 12),
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8)),
-                                            ),
-                                            child: const Text('Excluir tecido',
-                                                style: TextStyle(
-                                                    color: Colors.white)),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        // Editar nome do tecido
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                                color: Colors.grey.shade300),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              const Text('Editar nome do tecido:'),
-                                              TextField(
-                                                controller: tecidoController,
-                                                decoration:
-                                                    const InputDecoration(
-                                                  isDense: true,
-                                                  contentPadding:
-                                                      EdgeInsets.symmetric(
-                                                          vertical: 8),
-                                                  border: InputBorder.none,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        // Botões de imagem
-                                        Row(
-                                          children: [
-                                            ElevatedButton.icon(
-                                              onPressed: () {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                      content: Text(
-                                                          'Função de inserir imagem (simulada)')),
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.blue,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 20,
-                                                        vertical: 12),
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8)),
-                                              ),
-                                              icon: const Icon(Icons.image,
-                                                  color: Colors.white),
-                                              label: const Text('Inserir imagem',
-                                                  style: TextStyle(
-                                                      color: Colors.white)),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            ElevatedButton.icon(
-                                              onPressed: () {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                      content: Text(
-                                                          'Imagem removida (simulado)')),
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.red,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 20,
-                                                        vertical: 12),
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8)),
-                                              ),
-                                              icon: const Icon(Icons.delete,
-                                                  color: Colors.white),
-                                              label: const Text('Remover imagem',
-                                                  style: TextStyle(
-                                                      color: Colors.white)),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        // Editar descrição
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                                color: Colors.grey.shade300),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              const Text(
-                                                  'Editar Descrição do tecido:'),
-                                              const SizedBox(height: 8),
-                                              TextFormField(
-                                                controller: descricaoController,
-                                                minLines: 3,
-                                                maxLines: null,
-                                                decoration:
-                                                    const InputDecoration(
-                                                  isDense: true,
-                                                  contentPadding:
-                                                      EdgeInsets.all(8),
-                                                  border: InputBorder.none,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        // NOVO CAMPO - Referência do tecido
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                                color: Colors.grey.shade300),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              const Text(
-                                                  'Editar Referência do tecido:'),
-                                              const SizedBox(height: 8),
-                                              TextFormField(
-                                                controller:
-                                                    referenciaController,
-                                                decoration:
-                                                    const InputDecoration(
-                                                  isDense: true,
-                                                  hintText:
-                                                      'Ex: Referências bibliográficas de origem ou link',
-                                                  contentPadding:
-                                                      EdgeInsets.all(8),
-                                                  border: InputBorder.none,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-
-                                        // Botões Confirmar / Cancelar
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  passo = 1;
-                                                  tecidoSelecionado = null;
-                                                  tecidoController.text = '';
-                                                  descricaoController.text = '';
-                                                  referenciaController.text =
-                                                      ''; 
-                                                });
-                                                _scrollController.jumpTo(0);
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.red,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 12)),
-                                              child: const Text(
-                                                'Cancelar',
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            'Alterações confirmadas (simulado)')));
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors
-                                                      .greenAccent.shade700,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 12)),
-                                              child: const Text('Confirmar',
-                                                  style: TextStyle(
-                                                      color: Colors.white)),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                        onChanged: (v) => _onSelecionarGrupo(v),
+                                      ),
                                     ),
-                            ),
-                          ],
+                                    const SizedBox(width: 10),
+                                    ElevatedButton(
+                                      onPressed: _grupoSelecionado == null ? null : _excluirGrupoSelecionado,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                      ),
+                                      child: const Text('Deletar', style: TextStyle(color: Colors.white)),
+                                    ),
+                                  ],
+                                ),
+
+                              const SizedBox(height: 20),
+
+                              // ------ Selecionar Tipo (habilita quando o grupo está carregado) ------
+                              IgnorePointer(
+                                ignoring: _grupoSelecionado == null || _loadingTipos,
+                                child: Opacity(
+                                  opacity: (_grupoSelecionado == null || _loadingTipos) ? 0.6 : 1.0,
+                                  child: DropdownButtonFormField<String>(
+                                    value: _tipoSelecionado,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Selecionar Tipo de Tecido',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: _tipos
+                                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                                        .toList(),
+                                    onChanged: (v) => _onSelecionarTipo(v),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // ------ Campos de edição (aparecem quando há tipo escolhido) ------
+                              if (_tipoSelecionado != null) ...[
+                                TextField(
+                                  controller: _nomeCtrl,
+                                  enabled: !_loadingTecido && _tecidoSelecionado != null,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nome do tecido',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                TextField(
+                                  controller: _descricaoCtrl,
+                                  enabled: !_loadingTecido && _tecidoSelecionado != null,
+                                  maxLines: 4,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Descrição do tecido',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 30),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: (_tecidoSelecionado == null || _loadingTecido)
+                                          ? null
+                                          : _excluirTecido,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                      ),
+                                      child: const Text('Excluir tecido', style: TextStyle(color: Colors.white)),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    ElevatedButton(
+                                      onPressed: (_tecidoSelecionado == null || _loadingTecido)
+                                          ? null
+                                          : _confirmarEdicao,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                      ),
+                                      child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
