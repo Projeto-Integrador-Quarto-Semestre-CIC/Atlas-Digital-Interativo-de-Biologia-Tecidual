@@ -5,6 +5,7 @@ import 'package:app_pii/components/barra_ferramentas.dart';
 import 'package:webview_windows/webview_windows.dart' as webview_windows;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:math' as math;
+import 'package:http/http.dart' as http;
  
 class PaginaTecido extends StatefulWidget {
   const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
@@ -106,15 +107,49 @@ class _PaginaTecidoState extends State<PaginaTecido> {
   @override
   void initState() {
     super.initState();
+    print('PaginaTecido: tileSource="${widget.tileSource}" (len=${widget.tileSource.length})');
+
+    // Inicializa o Viewer p/ evitar LaterInitializationError
     _viewer = Viewer(
-        tileSource: widget.tileSource,
-        onWebViewCreated: (mobile, windows) {
-          setState(() {
-            _mobileController = mobile;
-            _windowsController = windows;
-          });
-        },
-      );
+      tileSource: widget.tileSource,
+      onWebViewCreated: (mobile, windows) {
+        setState(() {
+          _mobileController = mobile;
+          _windowsController = windows;
+        });
+      },
+    );
+
+    if (widget.tileSource.isEmpty) {
+      print('PaginaTecido: tileSource vazio — verifique DB / fluxo de criação do tecido');
+    } else {
+      _debugCheckDzi(widget.tileSource);
+    }
+  }
+
+  Future<void> _debugCheckDzi(String url) async {
+    if (url.isEmpty) {
+      print('PaginaTecido: tileSource vazio.');
+      return;
+    }
+    try {
+      final uri = Uri.parse(url);
+      final resp = await http.get(uri);
+      print('GET $url -> status ${resp.statusCode}, content-length header: ${resp.headers['content-length']}, bytes: ${resp.bodyBytes.length}');
+      if (resp.statusCode == 200) {
+        final prefix = String.fromCharCodes(resp.bodyBytes.take(512));
+        print('Primeiros bytes / trecho do .dzi:\n${prefix}');
+        if (prefix.contains('<Image') || prefix.contains('<?xml')) {
+          print('Parece um .dzi válido (contém <?xml ou <Image).');
+        } else {
+          print('Resposta 200 mas conteúdo não parece .dzi.');
+        }
+      } else {
+        print('Falha ao obter .dzi: ${resp.body}');
+      }
+    } catch (e) {
+      print('Erro ao buscar .dzi: $e');
+    }
   }
 
   @override

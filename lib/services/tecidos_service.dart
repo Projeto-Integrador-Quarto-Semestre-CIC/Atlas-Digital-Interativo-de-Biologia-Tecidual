@@ -42,6 +42,7 @@ class TecidoData {
   final String nome;
   final String texto;
   final String imagem;
+  final String tileSource;
 
   TecidoData({
     required this.id,
@@ -50,11 +51,14 @@ class TecidoData {
     required this.nome,
     required this.texto,
     required this.imagem,
+    this.tileSource = '',
   });
- String get imagemUrl {
+
+  String get imagemUrl {
     if (imagem.isEmpty) return '';
     return TecidosService.urlFromRelative(imagem);
   }
+
   factory TecidoData.fromMap(Map<String, dynamic> map) {
     return TecidoData(
       id: map['id'] is int ? map['id'] : int.parse(map['id'].toString()),
@@ -63,6 +67,7 @@ class TecidoData {
       nome: map['nome']?.toString() ?? '',
       texto: map['texto']?.toString() ?? '',
       imagem: map['imagem']?.toString() ?? '',
+     tileSource: map['tileSource']?.toString() ?? '',
     );
   }
 
@@ -76,16 +81,34 @@ class TecidoData {
 }
 
 class TecidosService {
-  /// Se estiver em Web/desktop no mesmo PC do servidor:
+  // Base do backend (usar apenas um lugar)
   static const String apiBaseUrl = 'http://localhost:3000';
-  // Emulador Android: 'http://10.0.2.2:3000'
-
   static const String _baseUrl = apiBaseUrl;
-  static String urlFromRelative(String path) {
-    final p = path.replaceAll('\\', '/');
-    final ts = DateTime.now().millisecondsSinceEpoch;
-    return '$apiBaseUrl/$p?ts=$ts'; // cache-buster
+
+  // Pedir ao servidor para converter um .mrxs local acessível ao servidor
+  static Future<String?> convertSlideFromLocalPath(String localPath) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/upload_slide'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'localPath': localPath}),
+    );
+    if (resp.statusCode != 200) {
+      print('convertSlideFromLocalPath falhou: ${resp.statusCode} - ${resp.body}');
+      return null;
+    }
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    if (data['ok'] == true && data['dzi'] != null) return data['dzi'].toString();
+    return null;
   }
+
+  static String urlFromRelative(String path) {
+    // normaliza barras para evitar '//'
+    var normalized = path.replaceAll('\\', '/');
+    while (normalized.startsWith('/')) normalized = normalized.substring(1);
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    return '$apiBaseUrl/$normalized?ts=$ts'; // cache-buster
+  }
+
   // ================== GRUPOS ==================
 
   static Future<List<GrupoTecidoData>> listarGrupos() async {
@@ -107,29 +130,27 @@ class TecidosService {
     return listarGrupos();
   }
 
- static Future<bool> criarGrupo({
-  required String grupo,
-  required String imagem,
-}) async {
-  final resp = await http.post(
-    Uri.parse('$_baseUrl/grupos'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'grupo': grupo,
-      'imagem': imagem,
-    }),
-  );
+  static Future<bool> criarGrupo({
+    required String grupo,
+    required String imagem,
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/grupos'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'grupo': grupo,
+        'imagem': imagem,
+      }),
+    );
 
-  if (resp.statusCode != 200) {
-    print('Erro ao criar grupo: ${resp.statusCode} - ${resp.body}');
-    return false;
+    if (resp.statusCode != 200) {
+      print('Erro ao criar grupo: ${resp.statusCode} - ${resp.body}');
+      return false;
+    }
+
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    return data['ok'] == true; // espera { ok: true, grupo: {...} }
   }
-
-  final data = jsonDecode(resp.body) as Map<String, dynamic>;
-  return data['ok'] == true; // espera { ok: true, grupo: {...} }
-}
-
-  
 
   // ================== TIPOS ==================
 
@@ -227,6 +248,32 @@ class TecidosService {
     return null;
   }
 
+  // ================== UPLOAD E CONVERSÃO DO SLIDE (.mrxs para .dzi) ==================
+  static Future<String?> uploadSlide({
+    required String nomeArquivo,
+    required Uint8List bytes,
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/upload_slide'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nome': nomeArquivo,
+        'bytes': base64Encode(bytes),
+      }),
+    );
+
+    if (resp.statusCode != 200) {
+      print('Erro upload slide: ${resp.statusCode} - ${resp.body}');
+      return null;
+    }
+
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    if (data['ok'] == true && data['dzi'] != null) {
+      return data['dzi'].toString(); // caminho onde o slide foi salvo
+    }
+    return null;
+  }
+
   // ================== TECIDOS ==================
 
   static Future<bool> criarTecido({
@@ -235,17 +282,23 @@ class TecidosService {
     required String nome,
     required String texto,
     String imagem = '',
+    String tileSource = '',
   }) async {
+    final payload = {
+      'grupo': grupo,
+      'tipo': tipo,
+      'nome': nome,
+      'texto': texto,
+      'imagem': imagem,
+      'tileSource': tileSource,
+    };
+    // DEBUG: ver payload antes do POST
+    print('TecidosService.criarTecido payload: ${jsonEncode(payload)}');
+
     final resp = await http.post(
       Uri.parse('$_baseUrl/tecidos'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'grupo': grupo,
-        'tipo': tipo,
-        'nome': nome,
-        'texto': texto,
-        'imagem': imagem,
-      }),
+      body: jsonEncode(payload),
     );
 
     if (resp.statusCode != 200) {
@@ -303,4 +356,14 @@ static Future<TecidoData> atualizarTecido(TecidoData t) async {
   final data = jsonDecode(resp.body) as Map<String, dynamic>;
   return TecidoData.fromMap(data);
 }
+
+  static Future<TecidoData?> getTecidoById(int id) async {
+    final resp = await http.get(Uri.parse('$_baseUrl/tecidos/$id'));
+    if (resp.statusCode != 200) {
+      print('Erro ao buscar tecido $id: ${resp.statusCode} - ${resp.body}');
+      return null;
+    }
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    return TecidoData.fromMap(data);
+  }
 }

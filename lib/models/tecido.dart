@@ -4,72 +4,74 @@ import 'package:mongo_dart/mongo_dart.dart';
 ///  MODEL: Tecido
 /// ========================
 class Tecido {
-  ObjectId? _id;          // _id do Mongo
-  int _idTecido;          // campo "id" lógico
-  String _grupo;          // nome do grupo (string)
-  String _tipo;
-  String _nome;
-  String _texto;
-  String _imagem;
+  final ObjectId? idMongo;
+  final int idTecido;
+  final String grupo;
+  final String tipo;
+  final String nome;
+  final String texto;
+  final String imagem;
+  final String tileSource; // <-- certificar que existe
 
   Tecido({
-    ObjectId? idMongo,
-    required int idTecido,
-    required String grupo,
-    required String tipo,
-    required String nome,
-    required String texto,
-    required String imagem,
-  })  : _id = idMongo,
-        _idTecido = idTecido,
-        _grupo = grupo,
-        _tipo = tipo,
-        _nome = nome,
-        _texto = texto,
-        _imagem = imagem;
+    this.idMongo,
+    required this.idTecido,
+    required this.grupo,
+    required this.tipo,
+    required this.nome,
+    required this.texto,
+    required this.imagem,
+    this.tileSource = '',
+  });
 
-  // GETTERS
-  ObjectId? get idMongo => _id;
-  int get idTecido => _idTecido;
-  String get grupo => _grupo;
-  String get tipo => _tipo;
-  String get nome => _nome;
-  String get texto => _texto;
-  String get imagem => _imagem;
-
-  // SETTERS (opcionais)
-  set grupo(String v) => _grupo = v;
-  set tipo(String v) => _tipo = v;
-  set nome(String v) => _nome = v;
-  set texto(String v) => _texto = v;
-  set imagem(String v) => _imagem = v;
-
-  // Mongo -> Dart
-  factory Tecido.fromMap(Map<String, dynamic> map) {
-    return Tecido(
-      idMongo: map['_id'] as ObjectId?,
-      idTecido: map['id'] is int
-          ? map['id']
-          : int.parse(map['id'].toString()),
-      grupo: map['grupo'].toString(),
-      tipo: map['tipo'] as String,
-      nome: map['nome'] as String,
-      texto: map['texto'] as String,
-      imagem: map['imagem'] as String,
-    );
-  }
-
-  // Dart -> Mongo
   Map<String, dynamic> toMap() {
     return {
-      if (_id != null) '_id': _id,
-      'id': _idTecido,
-      'grupo': _grupo,
-      'tipo': _tipo,
-      'nome': _nome,
-      'texto': _texto,
-      'imagem': _imagem,
+      if (idMongo != null) '_id': idMongo,
+      'id': idTecido,
+      'grupo': grupo,
+      'tipo': tipo,
+      'nome': nome,
+      'texto': texto,
+      'imagem': imagem,
+      'tileSource': tileSource, // <-- garantir presente
     };
+  }
+
+  factory Tecido.fromMap(Map<String, dynamic> map) {
+    ObjectId? idMongo;
+    final rawId = map['_id'];
+
+    if (rawId != null) {
+      if (rawId is ObjectId) {
+        idMongo = rawId;
+      } else if (rawId is String) {
+        try {
+          idMongo = ObjectId.fromHexString(rawId);
+        } catch (_) {
+          final hexMatch = RegExp(r'([0-9a-fA-F]{24})').firstMatch(rawId);
+          if (hexMatch != null) {
+            try {
+              idMongo = ObjectId.fromHexString(hexMatch.group(0)!);
+            } catch (_) {}
+          }
+        }
+      } else if (rawId is Map && rawId.containsKey(r'$oid')) {
+        try {
+          idMongo = ObjectId.fromHexString(rawId[r'$oid'].toString());
+        } catch (_) {}
+      }
+    }
+
+    return Tecido(
+      idMongo: idMongo,
+      idTecido: map['id'] is int ? map['id'] as int : int.tryParse(map['id']?.toString() ?? '') ?? 0,
+      grupo: map['grupo']?.toString() ?? '',
+      tipo: map['tipo']?.toString() ?? '',
+      nome: map['nome']?.toString() ?? '',
+      texto: map['texto']?.toString() ?? '',
+      imagem: map['imagem']?.toString() ?? '',
+      tileSource: map['tileSource']?.toString() ?? '',
+    );
   }
 }
 

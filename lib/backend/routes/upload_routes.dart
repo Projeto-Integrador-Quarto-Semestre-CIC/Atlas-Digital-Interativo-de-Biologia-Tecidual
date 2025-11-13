@@ -4,6 +4,9 @@ import 'dart:io';
 
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
+import 'package:path/path.dart' as p;
+
+import '../conversor.dart';
 
 void registerUploadRoutes(Router router) {
   // POST /upload_imagem_grupo
@@ -93,10 +96,75 @@ void registerUploadRoutes(Router router) {
     } catch (e) {
       return Response(
         500,
-        body: jsonEncode(
-            {'ok': false, 'message': 'Erro ao salvar imagem de tecido: $e'}),
+        body:
+            jsonEncode({'ok': false, 'message': 'Erro ao salvar imagem de tecido: $e'}),
         headers: {'Content-Type': 'application/json'},
       );
+    }
+  });
+
+  // POST /upload_slide  -> converte .mrxs local e retorna URL do .dzi
+  router.post('/upload_slide', (Request req) async {
+    try {
+      final body = jsonDecode(await req.readAsString()) as Map<String, dynamic>;
+      final localPath = body['localPath']?.toString();
+      if (localPath == null || localPath.isEmpty) {
+        return Response(400,
+            body: jsonEncode({'ok': false, 'message': 'caminho do arquivo é obrigatório'}),
+            headers: {'Content-Type': 'application/json'});
+      }
+
+      final srcFile = File(localPath);
+      if (!await srcFile.exists()) {
+        return Response(404,
+            body: jsonEncode({'ok': false, 'message': 'Arquivo não encontrado: $localPath'}),
+            headers: {'Content-Type': 'application/json'});
+      }
+
+      final base = p.basenameWithoutExtension(localPath);
+      final companionDir = Directory(p.join(p.dirname(localPath), base));
+      if (!await companionDir.exists()) {
+        return Response(400,
+            body: jsonEncode({
+              'ok': false,
+              'message':
+                  'Pasta auxiliar não encontrada ao lado do .mrxs. Verifique se a pasta "${companionDir.path}" existe.'
+            }),
+            headers: {'Content-Type': 'application/json'});
+      }
+
+      final dirSlides = Directory('uploads/slides');
+      if (!await dirSlides.exists()) await dirSlides.create(recursive: true);
+
+      final outDir = p.join(dirSlides.path, '${base}_dzi');
+      if (!await Directory(outDir).exists()) await Directory(outDir).create(recursive: true);
+
+      final scriptPath = p.join('bin', 'python', 'conversor.py');
+
+      ProcessResult result;
+      try {
+        result = await runPythonConversor(
+          scriptPath: scriptPath,
+          inputPath: localPath,
+          outputDir: outDir,
+          extraArgs: ['--format', 'png', '--tile_size', '1024'],
+        );
+      } catch (e) {
+        return Response.internalServerError(
+            body: jsonEncode({'ok': false, 'message': 'Falha ao executar o conversor', 'error': e.toString()}),
+            headers: {'Content-Type': 'application/json'});
+      }
+
+      if (result.exitCode != 0) {
+        return Response.internalServerError(
+            body: jsonEncode({'ok': false, 'message': 'Conversão falhou', 'stderr': result.stderr.toString()}),
+            headers: {'Content-Type': 'application/json'});
+      }
+
+      final dziUrl = '/uploads/slides/${base}_dzi/$base.dzi';
+      return Response.ok(jsonEncode({'ok': true, 'dzi': dziUrl}), headers: {'Content-Type': 'application/json'});
+    } catch (e) {
+      return Response(500, body: jsonEncode({'ok': false, 'message': 'Erro no servidor: ${e.toString()}'}), headers: {'Content-Type': 'application/json'});
     }
   });
 }
