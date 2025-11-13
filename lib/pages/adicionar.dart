@@ -330,16 +330,25 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                         final file = result.files.single;
                                         final path = file.path;
                                         if (path != null) {
-                                          final dzi = await TecidosService.convertSlideFromLocalPath(path);
-                                          if (dzi != null) {
-                                            setState(() {
-                                              _tileSourceFromLocal = dzi;
-                                              _slideNome = p.basename(path);
-                                            });
-                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Conversão concluída: $dzi')));
-                                          } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falha na conversão')));
-                                          }
+                                          // Deduz o tileSource a partir do nome do .mrxs
+                                          final base = p.basenameWithoutExtension(path);
+                                          final predicted = '/uploads/slides/${base}_dzi/$base.dzi';
+
+                                          setState(() {
+                                            _tileSourceFromLocal = predicted;
+                                            _slideNome = p.basename(path);
+                                          });
+
+                                          // Dispara conversão em background, mas não depende dela para o tileSource enviado
+                                          TecidosService.convertSlideFromLocalPath(path).then((dzi) {
+                                            if (dzi != null) {
+                                              print('Conversão concluída (background): $dzi');
+                                            } else {
+                                              print('Conversão falhou (background) para $path');
+                                            }
+                                          }).catchError((e) {
+                                            print('Erro na conversão background: $e');
+                                          });
                                         }
                                       }
                                     },
