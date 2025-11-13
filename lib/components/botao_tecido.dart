@@ -30,12 +30,22 @@ class BotaoTecido extends StatelessWidget {
     }
 
     final path = imagePath!;
+    final normalized = path.replaceAll('\\', '/');
+    if (normalized.startsWith('http://') || normalized.startsWith('https://') || normalized.startsWith('uploads/')) {
+      final url = (normalized.startsWith('http')) ? normalized : 'http://localhost:3000/$normalized';
+      return Image.network(
+        url,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(placeholderAsset, fit: BoxFit.contain);
+        },
+      );
+    }
 
     return Image.asset(
       path,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('Erro ao carregar asset de imagem ($path): $error');
         return Image.asset(
           placeholderAsset,
           fit: BoxFit.contain,

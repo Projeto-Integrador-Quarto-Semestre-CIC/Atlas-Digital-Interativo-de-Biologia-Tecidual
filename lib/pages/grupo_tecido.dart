@@ -89,8 +89,8 @@ class _PaginaGrupoTecidoState extends State<PaginaGrupoTecido> {
       itemCount: tecidos.length,
       itemBuilder: (context, index) {
         final tecido = tecidos[index];
+        print('DEBUG: tecido id=${tecido.id} nome=${tecido.nome} tileSource="${tecido.tileSource}"');
 
-        // se você já tem imagens de tecido em uploads/tecidos/
         final assetPath = tecido.imagemAssetPath;
         final imagePath = assetPath.isEmpty ? null : assetPath;
 
@@ -99,7 +99,6 @@ class _PaginaGrupoTecidoState extends State<PaginaGrupoTecido> {
           imagePath: imagePath,
           corTitulo: Colors.black,
           onTap: () {
-            // TODO: abrir tela do tecido, passando o objeto
             Navigator.pushNamed(
               context,
               '/tecido',

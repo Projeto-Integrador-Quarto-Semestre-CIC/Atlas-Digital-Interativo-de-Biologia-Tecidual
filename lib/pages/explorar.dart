@@ -60,26 +60,15 @@ class _PaginaExplorarState extends State<PaginaExplorar> {
     super.dispose();
   }
 
-  /// Converte o valor salvo no banco (grupo.imagem) em um caminho de asset.
-  ///
-  /// Exemplos:
-  ///   "/grupos/atividade23.04.png"  -> "uploads/grupos/atividade23.04.png"
-  ///   "grupos/atividade23.04.png"   -> "uploads/grupos/atividade23.04.png"
-  ///   "atividade23.04.png"          -> "uploads/grupos/atividade23.04.png"
+  /// Converte o valor salvo em um caminho pra imagem.
   String _assetPathFromDb(String imagemDb) {
     if (imagemDb.isEmpty) return '';
 
-    // normaliza barras
     var path = imagemDb.replaceAll('\\', '/');
-
-    // pega só o nome do arquivo (parte depois da última /)
     final fileName = path.split('/').last;
-
-    // monta o caminho de asset (igual você testou na Home)
     final assetPath = 'uploads/grupos/$fileName';
 
-    debugPrint('assetPath calculado para "$imagemDb": $assetPath');
-    return assetPath;
+    return TecidosService.urlFromRelative(assetPath);
   }
 
   @override
