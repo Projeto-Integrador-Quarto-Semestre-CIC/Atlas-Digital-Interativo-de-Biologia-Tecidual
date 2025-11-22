@@ -287,8 +287,14 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                         }
                                       }
                                     },
-                                    icon: const Icon(Icons.upload_file),
-                                    label: const Text('Inserir slide (.mrxs)'),
+                                    icon: const Icon(
+                                      Icons.upload_file,
+                                      color: Colors.white, 
+                                    ),
+                                    label: const Text(
+                                      'Inserir slide (.mrxs)',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF2196F3),
                                       padding: const EdgeInsets.symmetric(
@@ -594,7 +600,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         _tileSourceFromLocal = null; // upload bytes terá prioridade
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Slide selecionado: ${file.name} (será enviado ao servidor)')),
+        SnackBar(content: Text('Slide selecionado: ${file.name}')),
       );
       return;
     }
@@ -646,6 +652,13 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         const SnackBar(
           content: Text('Preencha grupo, tipo e nome do tecido.'),
         ),
+      );
+      return;
+    }
+
+    if (_slideBytes == null && _tileSourceFromLocal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um slide (.mrxs) antes de confirmar.')),
       );
       return;
     }
@@ -709,6 +722,11 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         _referenciaController.clear();
         _imagemTecidoBytes = null;
         _imagemTecidoNome = null;
+        // Limpa o slide selecionado após adicionar o tecido
+        _slideBytes = null;
+        _slideNome = null;
+        _tileSourceFromLocal = null;
+        _conversaoEmAndamento = false;
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
