@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Ignorar imagens .dzi para diminuir espaço ocupado no github:
+/uploads/slides/*
+!/uploads/slides/.gitkeep

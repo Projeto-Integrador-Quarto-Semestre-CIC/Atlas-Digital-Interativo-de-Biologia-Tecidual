@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:app_pii/services/auth.dart';
 import 'package:app_pii/components/barra_lateral.dart';
@@ -36,6 +37,16 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
   // imagem do GRUPO (quando adicionar grupo)
   Uint8List? _imagemGrupoBytes;
   String? _imagemGrupoNome;
+
+  // slide .mrxs
+  Uint8List? _slideBytes;
+  String? _slideNome;
+
+  // NOVO: para armazenar o tileSource do slide convertido
+  String? _tileSourceFromLocal; // novo campo
+
+  // NOVO: indicar conversão/upload em andamento
+  bool _conversaoEmAndamento = false;
 
   @override
   void initState() {
@@ -196,7 +207,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                               .showSnackBar(
                                             SnackBar(
                                               content: Text(
-                                                  'Imagem selecionada: ${file.name}'),
+                                                  'Imagem de capa selecionada: ${file.name}'),
                                             ),
                                           );
                                         }
@@ -205,7 +216,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                     icon: const Icon(Icons.image,
                                     color: Colors.white,),
                                     label: const Text(
-                                      'Inserir imagem',
+                                      'Inserir imagem de capa',
                                       style: TextStyle(color: Colors.white),
                                     ),
                                     style: ElevatedButton.styleFrom(
@@ -225,7 +236,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                     icon: const Icon(Icons.delete,
                                     color: Colors.white),
                                     label: const Text(
-                                      'Remover imagem',
+                                      'Remover imagem de capa',
                                       style: TextStyle(color: Colors.white),
                                     ),
                                     style: ElevatedButton.styleFrom(
@@ -234,6 +245,65 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                           horizontal: 16, vertical: 12),
                                     ),
                                   ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // ------- Botões de slide do TECIDO -------
+                              Row(
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final result =
+                                          await FilePicker.platform.pickFiles(
+                                        type: FileType.custom,
+                                        allowedExtensions: ['mrxs'],
+                                        withData: false,
+                                      );
+                                      if (result != null && result.files.isNotEmpty) {
+                                        final file = result.files.single;
+                                        final path = file.path;
+                                        if (path != null) {
+                                          // Deduz o tileSource a partir do nome do .mrxs
+                                          final base = p.basenameWithoutExtension(path);
+                                          final predicted = '/uploads/slides/${base}_dzi/$base.dzi';
+
+                                          setState(() {
+                                            _tileSourceFromLocal = predicted;
+                                            _slideNome = p.basename(path);
+                                          });
+
+                                          // Dispara conversão em background, mas não depende dela para o tileSource enviado
+                                          TecidosService.convertSlideFromLocalPath(path).then((dzi) {
+                                            if (dzi != null) {
+                                              print('Conversão concluída (background): $dzi');
+                                            } else {
+                                              print('Conversão falhou (background) para $path');
+                                            }
+                                          }).catchError((e) {
+                                            print('Erro na conversão background: $e');
+                                          });
+                                        }
+                                      }
+                                    },
+                                    icon: const Icon(
+                                      Icons.upload_file,
+                                      color: Colors.white, 
+                                    ),
+                                    label: const Text(
+                                      'Inserir slide (.mrxs)',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF2196F3),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 12),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  if (_slideNome != null)
+                                    Expanded(child: Text(_slideNome!, overflow: TextOverflow.ellipsis)),
                                 ],
                               ),
 
@@ -301,7 +371,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                         style: TextStyle(color: Colors.white)),
                                   ),
                                 ],
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -512,7 +582,66 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     );
   }
 
+  // NOVO: selecionar slide (.mrxs)
+  Future<void> _selecionarSlide() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mrxs'],
+      withData: true, // preferir bytes para upload direto
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.single;
+    // Se o picker trouxe bytes, guarda para upload
+    if (file.bytes != null) {
+      setState(() {
+        _slideBytes = file.bytes;
+        _slideNome = file.name;
+        _tileSourceFromLocal = null; // upload bytes terá prioridade
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Slide selecionado: ${file.name}')),
+      );
+      return;
+    }
+
+    if (file.path != null) {
+      final path = file.path!;
+      final base = p.basenameWithoutExtension(path);
+      final predicted = '/uploads/slides/${base}_dzi/$base.dzi';
+
+      setState(() {
+        _conversaoEmAndamento = true;
+        _slideNome = p.basename(path);
+        _tileSourceFromLocal = predicted;
+      });
+
+      final dzi = await TecidosService.convertSlideFromLocalPath(path);
+      setState(() {
+        _conversaoEmAndamento = false;
+        if (dzi != null) {
+          _tileSourceFromLocal = dzi;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Conversão concluída: $_tileSourceFromLocal')),
+          );
+        } else {
+          _tileSourceFromLocal = null;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Falha na conversão do slide.')),
+          );
+        }
+      });
+    }
+  }
+
   Future<void> _salvarTecido() async {
+    if (_conversaoEmAndamento && _slideBytes == null && _tileSourceFromLocal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aguarde a conversão do slide terminar.')),
+      );
+      return;
+    }
+
     final grupo = grupoSelecionado;
     final tipo = tipoSelecionado;
     final nome = _nomeTecidoController.text.trim();
@@ -523,6 +652,13 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         const SnackBar(
           content: Text('Preencha grupo, tipo e nome do tecido.'),
         ),
+      );
+      return;
+    }
+
+    if (_slideBytes == null && _tileSourceFromLocal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione um slide (.mrxs) antes de confirmar.')),
       );
       return;
     }
@@ -546,12 +682,32 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
       }
     }
 
+    String tileSource = '';
+
+    if (_slideBytes != null && _slideNome != null) {
+      final dzi = await TecidosService.uploadSlide(nomeArquivo: _slideNome!, bytes: _slideBytes!);
+      if (dzi != null) {
+        tileSource = dzi;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Falha ao enviar/converter arquivo .mrxs!')),
+        );
+        return;
+      }
+    } else if (_tileSourceFromLocal != null) {
+      tileSource = _tileSourceFromLocal!;
+    }
+
+    // DEBUG: mostrar exatamente o que será enviado (tileSource pode estar vazio)
+    print('_salvarTecido: tileSource="$tileSource" _tileSourceFromLocal="$_tileSourceFromLocal" _slideNome="$_slideNome"');
+
     final ok = await TecidosService.criarTecido(
-      grupo: grupo,
-      tipo: tipo,
-      nome: nome,
-      texto: texto,
+      grupo: grupoSelecionado!,
+      tipo: tipoSelecionado!,
+      nome: _nomeTecidoController.text.trim(),
+      texto: _descricaoController.text.trim(),
       imagem: imagemPath,
+      tileSource: tileSource,
     );
 
     if (ok) {
@@ -566,6 +722,11 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         _referenciaController.clear();
         _imagemTecidoBytes = null;
         _imagemTecidoNome = null;
+        // Limpa o slide selecionado após adicionar o tecido
+        _slideBytes = null;
+        _slideNome = null;
+        _tileSourceFromLocal = null;
+        _conversaoEmAndamento = false;
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

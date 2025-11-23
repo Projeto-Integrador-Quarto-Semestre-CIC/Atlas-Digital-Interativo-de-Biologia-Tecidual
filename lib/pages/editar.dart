@@ -13,7 +13,7 @@ class PaginaEditar extends StatefulWidget {
 class _PaginaEditarState extends State<PaginaEditar> {
   // Seleções atuais
   String? _grupoSelecionado; // nome do grupo
-  String? _tipoSelecionado;  // nome do tipo
+  String? _tipoSelecionado; // nome do tipo
 
   // Dados carregados
   List<GrupoTecidoData> _grupos = [];
@@ -26,6 +26,9 @@ class _PaginaEditarState extends State<PaginaEditar> {
   // Controllers
   final _nomeCtrl = TextEditingController();
   final _descricaoCtrl = TextEditingController();
+
+  // NOVO: busca para lista lateral / modal
+  final _buscaCtrl = TextEditingController();
 
   // Estados de carregamento/erro
   bool _loadingGrupos = true;
@@ -43,7 +46,89 @@ class _PaginaEditarState extends State<PaginaEditar> {
   void dispose() {
     _nomeCtrl.dispose();
     _descricaoCtrl.dispose();
+    _buscaCtrl.dispose(); // novo
     super.dispose();
+  }
+
+  // ------ Auxiliares para lista de tecidos por tipo ------
+
+  List<TecidoData> get _tecidosDoTipo {
+    if (_tipoSelecionado == null) return [];
+    final base = _tecidosDoGrupo.where((x) => x.tipo == _tipoSelecionado).toList();
+    final q = _buscaCtrl.text.trim().toLowerCase();
+    if (q.isEmpty) return base;
+    return base.where((t) => t.nome.toLowerCase().contains(q)).toList();
+  }
+
+  void _aplicarSelecao(TecidoData t) {
+    setState(() {
+      _tecidoSelecionado = t;
+      _nomeCtrl.text = t.nome;
+      _descricaoCtrl.text = t.texto;
+    });
+  }
+
+  Future<void> _abrirSeletorMobile() async {
+    final selecionado = await showModalBottomSheet<TecidoData>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setStateModal) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(ctx).size.height * 0.7,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Selecionar tecido',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: TextField(
+                        controller: _buscaCtrl,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.search),
+                          hintText: 'Buscar por nome...',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (_) => setStateModal(() {}),
+                      ),
+                    ),
+                    Expanded(
+                      child: _tecidosDoTipo.isEmpty
+                          ? const Center(child: Text('Nenhum tecido para este tipo.'))
+                          : ListView.builder(
+                              itemCount: _tecidosDoTipo.length,
+                              itemBuilder: (_, i) {
+                                final t = _tecidosDoTipo[i];
+                                final selecionado = _tecidoSelecionado?.id == t.id;
+                                return ListTile(
+                                  title: Text(t.nome),
+                                  subtitle: Text(t.tipo),
+                                  selected: selecionado,
+                                  onTap: () => Navigator.pop(ctx, t),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (selecionado != null) {
+      _aplicarSelecao(selecionado);
+    }
   }
 
   // ----- Carregamentos -----
@@ -60,6 +145,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
       _tecidoSelecionado = null;
       _nomeCtrl.clear();
       _descricaoCtrl.clear();
+      _buscaCtrl.clear();
     });
 
     try {
@@ -87,6 +173,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
       _tecidoSelecionado = null;
       _nomeCtrl.clear();
       _descricaoCtrl.clear();
+      _buscaCtrl.clear();
       _loadingTipos = true;
     });
 
@@ -119,6 +206,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
       _tecidoSelecionado = null;
       _nomeCtrl.clear();
       _descricaoCtrl.clear();
+      _buscaCtrl.clear();
       _loadingTecido = true;
     });
 
@@ -164,11 +252,11 @@ class _PaginaEditarState extends State<PaginaEditar> {
       // cria uma cópia atualizada só com os campos que mudam
       final atualizado = TecidoData(
         id: t.id,
-        grupo: t.grupo,                 // mantém
-        tipo: t.tipo,                   // mantém
-        nome: _nomeCtrl.text.trim(),    // altera
+        grupo: t.grupo, // mantém
+        tipo: t.tipo, // mantém
+        nome: _nomeCtrl.text.trim(), // altera
         texto: _descricaoCtrl.text.trim(), // altera
-        imagem: t.imagem,               // mantém
+        imagem: t.imagem, // mantém
       );
 
       final salvo = await TecidosService.atualizarTecido(atualizado);
@@ -222,6 +310,7 @@ class _PaginaEditarState extends State<PaginaEditar> {
         _tecidoSelecionado = null;
         _nomeCtrl.clear();
         _descricaoCtrl.clear();
+        _buscaCtrl.clear();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tecido excluído.')),
@@ -314,7 +403,10 @@ class _PaginaEditarState extends State<PaginaEditar> {
                               else if (_erroGrupos != null)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 16),
-                                  child: Text(_erroGrupos!, style: const TextStyle(color: Colors.red)),
+                                  child: Text(
+                                    _erroGrupos!,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
                                 )
                               else
                                 Row(
@@ -327,22 +419,31 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                           border: OutlineInputBorder(),
                                         ),
                                         items: _grupos
-                                            .map((g) => DropdownMenuItem(
-                                                  value: g.grupo,
-                                                  child: Text(g.grupo),
-                                                ))
+                                            .map(
+                                              (g) => DropdownMenuItem(
+                                                value: g.grupo,
+                                                child: Text(g.grupo),
+                                              ),
+                                            )
                                             .toList(),
                                         onChanged: (v) => _onSelecionarGrupo(v),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
                                     ElevatedButton(
-                                      onPressed: _grupoSelecionado == null ? null : _excluirGrupoSelecionado,
+                                      onPressed:
+                                          _grupoSelecionado == null ? null : _excluirGrupoSelecionado,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 14,
+                                        ),
                                       ),
-                                      child: const Text('Deletar', style: TextStyle(color: Colors.white)),
+                                      child: const Text(
+                                        'Deletar',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -353,7 +454,8 @@ class _PaginaEditarState extends State<PaginaEditar> {
                               IgnorePointer(
                                 ignoring: _grupoSelecionado == null || _loadingTipos,
                                 child: Opacity(
-                                  opacity: (_grupoSelecionado == null || _loadingTipos) ? 0.6 : 1.0,
+                                  opacity:
+                                      (_grupoSelecionado == null || _loadingTipos) ? 0.6 : 1.0,
                                   child: DropdownButtonFormField<String>(
                                     value: _tipoSelecionado,
                                     decoration: const InputDecoration(
@@ -361,7 +463,12 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                       border: OutlineInputBorder(),
                                     ),
                                     items: _tipos
-                                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                                        .map(
+                                          (t) => DropdownMenuItem(
+                                            value: t,
+                                            child: Text(t),
+                                          ),
+                                        )
                                         .toList(),
                                     onChanged: (v) => _onSelecionarTipo(v),
                                   ),
@@ -372,18 +479,129 @@ class _PaginaEditarState extends State<PaginaEditar> {
 
                               // ------ Campos de edição (aparecem quando há tipo escolhido) ------
                               if (_tipoSelecionado != null) ...[
-                                TextField(
-                                  controller: _nomeCtrl,
-                                  enabled: !_loadingTecido && _tecidoSelecionado != null,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Nome do tecido',
-                                    border: OutlineInputBorder(),
-                                  ),
+                                // >>>>>>> Campo Nome + Sidebar <<<<<<<
+                                LayoutBuilder(
+                                  builder: (ctx, cons) {
+                                    final bool wide = cons.maxWidth >= 900;
+
+                                    final nomeField = TextField(
+                                      controller: _nomeCtrl,
+                                      enabled: !_loadingTecido && _tecidoSelecionado != null,
+                                      decoration: InputDecoration(
+                                        labelText: 'Nome do tecido',
+                                        border: const OutlineInputBorder(),
+                                        suffixIcon: !wide
+                                            ? IconButton(
+                                                tooltip: 'Selecionar tecido',
+                                                icon: const Icon(Icons.list),
+                                                onPressed: (_tipoSelecionado == null ||
+                                                        _tecidosDoTipo.isEmpty)
+                                                    ? null
+                                                    : _abrirSeletorMobile,
+                                              )
+                                            : null,
+                                      ),
+                                    );
+
+                                    if (!wide) {
+                                      // Tela estreita: só o campo, seletor via modal
+                                      return nomeField;
+                                    }
+
+                                    // Tela larga: campo + sidebar com lista
+                                    return Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(child: nomeField),
+                                        const SizedBox(width: 16),
+                                        Container(
+                                          width: 280,
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: Colors.black12),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              const Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  'Selecionar tecido',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              TextField(
+                                                controller: _buscaCtrl,
+                                                decoration: const InputDecoration(
+                                                  prefixIcon: Icon(Icons.search),
+                                                  hintText: 'Buscar por nome...',
+                                                  border: OutlineInputBorder(),
+                                                  isDense: true,
+                                                ),
+                                                onChanged: (_) => setState(() {}),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              SizedBox(
+                                                height: 220,
+                                                child: _tecidosDoTipo.isEmpty
+                                                    ? const Center(
+                                                        child: Text(
+                                                          'Nenhum tecido para este tipo.',
+                                                        ),
+                                                      )
+                                                    : ListView.builder(
+                                                        itemCount: _tecidosDoTipo.length,
+                                                        itemBuilder: (_, i) {
+                                                          final t = _tecidosDoTipo[i];
+                                                          final selecionado =
+                                                              _tecidoSelecionado?.id == t.id;
+                                                          return ListTile(
+                                                            dense: true,
+                                                            title: Text(
+                                                              t.nome,
+                                                              maxLines: 1,
+                                                              overflow:
+                                                                  TextOverflow.ellipsis,
+                                                            ),
+                                                            subtitle: Text(t.tipo),
+                                                            selected: selecionado,
+                                                            shape:
+                                                                RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(8),
+                                                            ),
+                                                            tileColor: selecionado
+                                                                ? Colors.green
+                                                                    .withOpacity(0.08)
+                                                                : null,
+                                                            onTap: () => _aplicarSelecao(t),
+                                                            trailing: selecionado
+                                                                ? const Icon(
+                                                                    Icons.check,
+                                                                    size: 18,
+                                                                  )
+                                                                : null,
+                                                          );
+                                                        },
+                                                      ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
+
                                 const SizedBox(height: 20),
+
                                 TextField(
                                   controller: _descricaoCtrl,
-                                  enabled: !_loadingTecido && _tecidoSelecionado != null,
+                                  enabled:
+                                      !_loadingTecido && _tecidoSelecionado != null,
                                   maxLines: 4,
                                   decoration: const InputDecoration(
                                     labelText: 'Descrição do tecido',
@@ -395,25 +613,38 @@ class _PaginaEditarState extends State<PaginaEditar> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     ElevatedButton(
-                                      onPressed: (_tecidoSelecionado == null || _loadingTecido)
+                                      onPressed: (_tecidoSelecionado == null ||
+                                              _loadingTecido)
                                           ? null
                                           : _excluirTecido,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 12,
+                                        ),
                                       ),
-                                      child: const Text('Excluir tecido', style: TextStyle(color: Colors.white)),
+                                      child: const Text(
+                                        'Excluir tecido',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                     const SizedBox(width: 16),
                                     ElevatedButton(
-                                      onPressed: (_tecidoSelecionado == null || _loadingTecido)
+                                      onPressed: (_tecidoSelecionado == null ||
+                                              _loadingTecido)
                                           ? null
                                           : _confirmarEdicao,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.green,
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 12),
                                       ),
-                                      child: const Text('Confirmar', style: TextStyle(color: Colors.white)),
+                                      child: const Text(
+                                        'Confirmar',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   ],
                                 ),

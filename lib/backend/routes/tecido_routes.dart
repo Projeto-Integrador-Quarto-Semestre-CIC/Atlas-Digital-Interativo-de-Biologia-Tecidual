@@ -16,6 +16,7 @@ Map<String, dynamic> _tecidoToJson(Tecido t) => {
   'nome': t.nome,
   'texto': t.texto,
   'imagem': t.imagem,
+  'tileSource': t.tileSource,
 };
 
 void registerTecidoRoutes(Router router) {
@@ -65,12 +66,18 @@ void registerTecidoRoutes(Router router) {
   // POST /tecidos  {grupo, tipo, nome, texto, imagem}
   router.post('/tecidos', (Request req) async {
     try {
-      final body = jsonDecode(await req.readAsString()) as Map<String, dynamic>;
-      final grupo  = (body['grupo'] ?? '').toString().trim();
-      final tipo   = (body['tipo']  ?? '').toString().trim();
-      final nome   = (body['nome']  ?? '').toString().trim();
-      final texto  = (body['texto'] ?? '').toString();
+      final raw = await req.readAsString();
+      print('POST /tecidos body raw: $raw'); // <<-- DEBUG
+
+      final body = jsonDecode(raw) as Map<String, dynamic>;
+      final grupo = (body['grupo'] ?? '').toString().trim();
+      final tipo  = (body['tipo'] ?? '').toString().trim();
+      final nome  = (body['nome'] ?? '').toString().trim();
+      final texto = (body['texto'] ?? '').toString();
       final imagem = (body['imagem'] ?? '').toString();
+      final tile   = (body['tileSource'] ?? '').toString();
+
+      print('Parsed tileSource: "$tile"'); // <<-- DEBUG
 
       if (grupo.isEmpty || tipo.isEmpty || nome.isEmpty) {
         return Response(400,
@@ -93,14 +100,17 @@ void registerTecidoRoutes(Router router) {
         nome: nome,
         texto: texto,
         imagem: imagem,
+        tileSource: tile,
       );
 
-      await repo.inserir(novo);
-        return Response.ok(jsonEncode({
-      'ok': true,
-      'tecido': _tecidoToJson(novo),}),headers: _jsonHeaders,
-    );
+      print('Novo Tecido toMap(): ${novo.toMap()}'); // <<-- DEBUG antes de inserir
 
+      await repo.inserir(novo);
+
+      final inserted = await coll.findOne(where.eq('id', novoId));
+      print('Documento inserido no Mongo: $inserted'); // <<-- DEBUG
+
+      return Response.ok(jsonEncode({'ok': true, 'tecido': _tecidoToJson(novo)}), headers: _jsonHeaders);
     } catch (e, st) {
       print('POST /tecidos erro: $e\n$st');
       return Response.internalServerError(
