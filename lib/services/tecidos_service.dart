@@ -21,10 +21,12 @@ class GrupoTecidoData {
       imagem: map['imagem']?.toString() ?? '',
     );
   }
+
   String get imagemUrl {
     if (imagem.isEmpty) return '';
     return TecidosService.urlFromRelative(imagem);
   }
+
   /// Caminho de asset para a imagem do GRUPO (se você estiver usando assets).
   String get imagemAssetPath {
     if (imagem.isEmpty) return '';
@@ -43,6 +45,7 @@ class TecidoData {
   final String texto;
   final String imagem;
   final String tileSource;
+  final String referencias; // <-- NOVO CAMPO
 
   TecidoData({
     required this.id,
@@ -52,6 +55,7 @@ class TecidoData {
     required this.texto,
     required this.imagem,
     this.tileSource = '',
+    this.referencias = '', // <-- opcional com default para não quebrar código antigo
   });
 
   String get imagemUrl {
@@ -67,7 +71,8 @@ class TecidoData {
       nome: map['nome']?.toString() ?? '',
       texto: map['texto']?.toString() ?? '',
       imagem: map['imagem']?.toString() ?? '',
-     tileSource: map['tileSource']?.toString() ?? '',
+      tileSource: map['tileSource']?.toString() ?? '',
+      referencias: map['referencias']?.toString() ?? '', // <-- lê do backend, se vier
     );
   }
 
@@ -156,8 +161,7 @@ class TecidosService {
 
   /// devolve apenas os nomes dos tipos de um grupo
   static Future<List<String>> listarTiposPorGrupo(String grupo) async {
-    final resp =
-        await http.get(Uri.parse('$_baseUrl/tecidos?grupo=$grupo'));
+    final resp = await http.get(Uri.parse('$_baseUrl/tecidos?grupo=$grupo'));
 
     if (resp.statusCode != 200) {
       print('Erro ao buscar tipos: ${resp.statusCode} - ${resp.body}');
@@ -179,10 +183,8 @@ class TecidosService {
   }
 
   /// BUSCA TODOS os TECIDOS de um grupo.
-  static Future<List<TecidoData>> listarTecidosPorGrupo(
-      String grupo) async {
-    final resp =
-        await http.get(Uri.parse('$_baseUrl/tecidos?grupo=$grupo'));
+  static Future<List<TecidoData>> listarTecidosPorGrupo(String grupo) async {
+    final resp = await http.get(Uri.parse('$_baseUrl/tecidos?grupo=$grupo'));
 
     if (resp.statusCode != 200) {
       throw Exception(
@@ -283,6 +285,7 @@ class TecidosService {
     required String texto,
     String imagem = '',
     String tileSource = '',
+    String referencias = '', // <-- novo parâmetro, opcional
   }) async {
     final payload = {
       'grupo': grupo,
@@ -291,6 +294,7 @@ class TecidosService {
       'texto': texto,
       'imagem': imagem,
       'tileSource': tileSource,
+      'referencias': referencias, // <-- enviado para o backend
     };
     // DEBUG: ver payload antes do POST
     print('TecidosService.criarTecido payload: ${jsonEncode(payload)}');
@@ -310,52 +314,53 @@ class TecidosService {
     return data['ok'] == true;
   }
 
-
   // GRUPOS
-static Future<void> excluirGrupo(int idGrupo) async {
-  final resp = await http.delete(Uri.parse('$_baseUrl/grupos/$idGrupo'));
-  if (resp.statusCode != 200) {
-    throw Exception('Erro ao excluir grupo: ${resp.statusCode} - ${resp.body}');
+  static Future<void> excluirGrupo(int idGrupo) async {
+    final resp = await http.delete(Uri.parse('$_baseUrl/grupos/$idGrupo'));
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao excluir grupo: ${resp.statusCode} - ${resp.body}');
+    }
   }
-}
 
-static Future<void> atualizarGrupo(GrupoTecidoData grupo) async {
-  final resp = await http.put(
-    Uri.parse('$_baseUrl/grupos/${grupo.id}'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'grupo': grupo.grupo, 'imagem': grupo.imagem}),
-  );
-  if (resp.statusCode != 200) {
-    throw Exception('Erro ao atualizar grupo: ${resp.statusCode} - ${resp.body}');
+  static Future<void> atualizarGrupo(GrupoTecidoData grupo) async {
+    final resp = await http.put(
+      Uri.parse('$_baseUrl/grupos/${grupo.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'grupo': grupo.grupo, 'imagem': grupo.imagem}),
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao atualizar grupo: ${resp.statusCode} - ${resp.body}');
+    }
   }
-}
 
-// TECIDOS
-static Future<void> excluirTecido(int idTecido) async {
-  final resp = await http.delete(Uri.parse('$_baseUrl/tecidos/$idTecido'));
-  if (resp.statusCode != 200) {
-    throw Exception('Erro ao excluir tecido: ${resp.statusCode} - ${resp.body}');
+  // TECIDOS
+  static Future<void> excluirTecido(int idTecido) async {
+    final resp = await http.delete(Uri.parse('$_baseUrl/tecidos/$idTecido'));
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao excluir tecido: ${resp.statusCode} - ${resp.body}');
+    }
   }
-}
 
-static Future<TecidoData> atualizarTecido(TecidoData t) async {
-  final resp = await http.put(
-    Uri.parse('$_baseUrl/tecidos/${t.id}'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'grupo': t.grupo,
-      'tipo': t.tipo,
-      'nome': t.nome,
-      'texto': t.texto,
-      'imagem': t.imagem,
-    }),
-  );
-  if (resp.statusCode != 200) {
-    throw Exception('Erro ao atualizar tecido: ${resp.statusCode} - ${resp.body}');
+  static Future<TecidoData> atualizarTecido(TecidoData t) async {
+    final resp = await http.put(
+      Uri.parse('$_baseUrl/tecidos/${t.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'grupo': t.grupo,
+        'tipo': t.tipo,
+        'nome': t.nome,
+        'texto': t.texto,
+        'imagem': t.imagem,
+        'tileSource': t.tileSource,
+        'referencias': t.referencias, // <-- também mandamos no update
+      }),
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao atualizar tecido: ${resp.statusCode} - ${resp.body}');
+    }
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    return TecidoData.fromMap(data);
   }
-  final data = jsonDecode(resp.body) as Map<String, dynamic>;
-  return TecidoData.fromMap(data);
-}
 
   static Future<TecidoData?> getTecidoById(int id) async {
     final resp = await http.get(Uri.parse('$_baseUrl/tecidos/$id'));

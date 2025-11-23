@@ -21,7 +21,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
   final TextEditingController _nomeTecidoController = TextEditingController();
   final TextEditingController _descricaoController = TextEditingController();
 
-  // NOVO: campo de referência
+  // Campo de referência
   final TextEditingController _referenciaController = TextEditingController();
 
   List<GrupoTecidoData> _grupos = [];
@@ -42,10 +42,10 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
   Uint8List? _slideBytes;
   String? _slideNome;
 
-  // NOVO: para armazenar o tileSource do slide convertido
-  String? _tileSourceFromLocal; // novo campo
+  // para armazenar o tileSource do slide convertido
+  String? _tileSourceFromLocal;
 
-  // NOVO: indicar conversão/upload em andamento
+  // indicar conversão/upload em andamento
   bool _conversaoEmAndamento = false;
 
   @override
@@ -86,7 +86,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
   void dispose() {
     _nomeTecidoController.dispose();
     _descricaoController.dispose();
-    _referenciaController.dispose(); // NOVO
+    _referenciaController.dispose();
     super.dispose();
   }
 
@@ -104,7 +104,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
               body: Row(
                 children: [
                   if (telaGrande) const BarraLateral(),
-
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(32),
@@ -207,14 +206,17 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                               .showSnackBar(
                                             SnackBar(
                                               content: Text(
-                                                  'Imagem de capa selecionada: ${file.name}'),
+                                                'Imagem de capa selecionada: ${file.name}',
+                                              ),
                                             ),
                                           );
                                         }
                                       }
                                     },
-                                    icon: const Icon(Icons.image,
-                                    color: Colors.white,),
+                                    icon: const Icon(
+                                      Icons.image,
+                                      color: Colors.white,
+                                    ),
                                     label: const Text(
                                       'Inserir imagem de capa',
                                       style: TextStyle(color: Colors.white),
@@ -222,7 +224,9 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF2196F3),
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 12),
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 16),
@@ -233,8 +237,10 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                         _imagemTecidoNome = null;
                                       });
                                     },
-                                    icon: const Icon(Icons.delete,
-                                    color: Colors.white),
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.white,
+                                    ),
                                     label: const Text(
                                       'Remover imagem de capa',
                                       style: TextStyle(color: Colors.white),
@@ -242,7 +248,9 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 12),
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -261,35 +269,44 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                         allowedExtensions: ['mrxs'],
                                         withData: false,
                                       );
-                                      if (result != null && result.files.isNotEmpty) {
+                                      if (result != null &&
+                                          result.files.isNotEmpty) {
                                         final file = result.files.single;
                                         final path = file.path;
                                         if (path != null) {
                                           // Deduz o tileSource a partir do nome do .mrxs
-                                          final base = p.basenameWithoutExtension(path);
-                                          final predicted = '/uploads/slides/${base}_dzi/$base.dzi';
+                                          final base =
+                                              p.basenameWithoutExtension(path);
+                                          final predicted =
+                                              '/uploads/slides/${base}_dzi/$base.dzi';
 
                                           setState(() {
                                             _tileSourceFromLocal = predicted;
                                             _slideNome = p.basename(path);
                                           });
 
-                                          // Dispara conversão em background, mas não depende dela para o tileSource enviado
-                                          TecidosService.convertSlideFromLocalPath(path).then((dzi) {
+                                          // Conversão em background (não bloqueia)
+                                          TecidosService
+                                                  .convertSlideFromLocalPath(
+                                                      path)
+                                              .then((dzi) {
                                             if (dzi != null) {
-                                              print('Conversão concluída (background): $dzi');
+                                              print(
+                                                  'Conversão concluída (background): $dzi');
                                             } else {
-                                              print('Conversão falhou (background) para $path');
+                                              print(
+                                                  'Conversão falhou (background) para $path');
                                             }
                                           }).catchError((e) {
-                                            print('Erro na conversão background: $e');
+                                            print(
+                                                'Erro na conversão background: $e');
                                           });
                                         }
                                       }
                                     },
                                     icon: const Icon(
                                       Icons.upload_file,
-                                      color: Colors.white, 
+                                      color: Colors.white,
                                     ),
                                     label: const Text(
                                       'Inserir slide (.mrxs)',
@@ -298,12 +315,19 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF2196F3),
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 12),
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   if (_slideNome != null)
-                                    Expanded(child: Text(_slideNome!, overflow: TextOverflow.ellipsis)),
+                                    Expanded(
+                                      child: Text(
+                                        _slideNome!,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                 ],
                               ),
 
@@ -354,10 +378,14 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 12),
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
                                     ),
-                                    child: const Text('Cancelar',
-                                        style: TextStyle(color: Colors.white)),
+                                    child: const Text(
+                                      'Cancelar',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                   ),
                                   const SizedBox(width: 16),
                                   ElevatedButton(
@@ -365,10 +393,14 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green,
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 12),
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
                                     ),
-                                    child: const Text('Confirmar',
-                                        style: TextStyle(color: Colors.white)),
+                                    child: const Text(
+                                      'Confirmar',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -404,10 +436,12 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
               border: const OutlineInputBorder(),
             ),
             items: items
-                .map((item) => DropdownMenuItem(
-                      value: item,
-                      child: Text(item),
-                    ))
+                .map(
+                  (item) => DropdownMenuItem(
+                    value: item,
+                    child: Text(item),
+                  ),
+                )
                 .toList(),
             onChanged: items.isEmpty ? null : onChanged,
           ),
@@ -442,7 +476,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         title: Text(titulo),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'Digite o nome'),
+          decoration:
+              const InputDecoration(hintText: 'Digite o nome'),
         ),
         actions: [
           TextButton(
@@ -481,8 +516,9 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                 children: [
                   TextField(
                     controller: nomeCtrl,
-                    decoration:
-                        const InputDecoration(labelText: 'Nome do grupo'),
+                    decoration: const InputDecoration(
+                      labelText: 'Nome do grupo',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -495,7 +531,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                             withData: true,
                           );
 
-                          if (result != null && result.files.isNotEmpty) {
+                          if (result != null &&
+                              result.files.isNotEmpty) {
                             final file = result.files.single;
                             if (file.bytes != null) {
                               setStateDialog(() {
@@ -544,7 +581,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
 
                     if (_imagemGrupoBytes != null &&
                         _imagemGrupoNome != null) {
-                      final path = await TecidosService.uploadImagemGrupo(
+                      final path =
+                          await TecidosService.uploadImagemGrupo(
                         nomeArquivo: _imagemGrupoNome!,
                         bytes: _imagemGrupoBytes!,
                       );
@@ -567,7 +605,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Erro ao salvar grupo no servidor.'),
+                          content: Text(
+                              'Erro ao salvar grupo no servidor.'),
                         ),
                       );
                     }
@@ -582,7 +621,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     );
   }
 
-  // NOVO: selecionar slide (.mrxs)
+  // selecionar slide (.mrxs) — versão com bytes (não usada no build, mas mantida)
   Future<void> _selecionarSlide() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -592,7 +631,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     if (result == null || result.files.isEmpty) return;
 
     final file = result.files.single;
-    // Se o picker trouxe bytes, guarda para upload
     if (file.bytes != null) {
       setState(() {
         _slideBytes = file.bytes;
@@ -608,7 +646,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     if (file.path != null) {
       final path = file.path!;
       final base = p.basenameWithoutExtension(path);
-      final predicted = '/uploads/slides/${base}_dzi/$base.dzi';
+      final predicted =
+          '/uploads/slides/${base}_dzi/$base.dzi';
 
       setState(() {
         _conversaoEmAndamento = true;
@@ -616,18 +655,24 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         _tileSourceFromLocal = predicted;
       });
 
-      final dzi = await TecidosService.convertSlideFromLocalPath(path);
+      final dzi =
+          await TecidosService.convertSlideFromLocalPath(path);
       setState(() {
         _conversaoEmAndamento = false;
         if (dzi != null) {
           _tileSourceFromLocal = dzi;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Conversão concluída: $_tileSourceFromLocal')),
+            SnackBar(
+              content:
+                  Text('Conversão concluída: $_tileSourceFromLocal'),
+            ),
           );
         } else {
           _tileSourceFromLocal = null;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Falha na conversão do slide.')),
+            const SnackBar(
+              content: Text('Falha na conversão do slide.'),
+            ),
           );
         }
       });
@@ -635,9 +680,13 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
   }
 
   Future<void> _salvarTecido() async {
-    if (_conversaoEmAndamento && _slideBytes == null && _tileSourceFromLocal == null) {
+    if (_conversaoEmAndamento &&
+        _slideBytes == null &&
+        _tileSourceFromLocal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aguarde a conversão do slide terminar.')),
+        const SnackBar(
+          content: Text('Aguarde a conversão do slide terminar.'),
+        ),
       );
       return;
     }
@@ -646,6 +695,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     final tipo = tipoSelecionado;
     final nome = _nomeTecidoController.text.trim();
     final texto = _descricaoController.text.trim();
+    final referencias = _referenciaController.text.trim();
 
     if (grupo == null || tipo == null || nome.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -658,7 +708,10 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
 
     if (_slideBytes == null && _tileSourceFromLocal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione um slide (.mrxs) antes de confirmar.')),
+        const SnackBar(
+          content: Text(
+              'Selecione um slide (.mrxs) antes de confirmar.'),
+        ),
       );
       return;
     }
@@ -675,7 +728,8 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Falha ao enviar imagem do tecido.'),
+            content:
+                Text('Falha ao enviar imagem do tecido.'),
           ),
         );
         return;
@@ -685,12 +739,18 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
     String tileSource = '';
 
     if (_slideBytes != null && _slideNome != null) {
-      final dzi = await TecidosService.uploadSlide(nomeArquivo: _slideNome!, bytes: _slideBytes!);
+      final dzi = await TecidosService.uploadSlide(
+        nomeArquivo: _slideNome!,
+        bytes: _slideBytes!,
+      );
       if (dzi != null) {
         tileSource = dzi;
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Falha ao enviar/converter arquivo .mrxs!')),
+          const SnackBar(
+            content: Text(
+                'Falha ao enviar/converter arquivo .mrxs!'),
+          ),
         );
         return;
       }
@@ -698,8 +758,12 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
       tileSource = _tileSourceFromLocal!;
     }
 
-    // DEBUG: mostrar exatamente o que será enviado (tileSource pode estar vazio)
-    print('_salvarTecido: tileSource="$tileSource" _tileSourceFromLocal="$_tileSourceFromLocal" _slideNome="$_slideNome"');
+    // DEBUG
+    print(
+      '_salvarTecido: tileSource="$tileSource" '
+      '_tileSourceFromLocal="$_tileSourceFromLocal" '
+      '_slideNome="$_slideNome"',
+    );
 
     final ok = await TecidosService.criarTecido(
       grupo: grupoSelecionado!,
@@ -708,6 +772,7 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
       texto: _descricaoController.text.trim(),
       imagem: imagemPath,
       tileSource: tileSource,
+      referencias: referencias, // <--- AGORA ESTÁ INDO PARA O BACKEND
     );
 
     if (ok) {
@@ -722,7 +787,6 @@ class _PaginaAdicionarState extends State<PaginaAdicionar> {
         _referenciaController.clear();
         _imagemTecidoBytes = null;
         _imagemTecidoNome = null;
-        // Limpa o slide selecionado após adicionar o tecido
         _slideBytes = null;
         _slideNome = null;
         _tileSourceFromLocal = null;

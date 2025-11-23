@@ -11,7 +11,8 @@ class Tecido {
   final String nome;
   final String texto;
   final String imagem;
-  final String tileSource; // <-- certificar que existe
+  final String tileSource;
+  final String referencias; // <-- NOVO CAMPO
 
   Tecido({
     this.idMongo,
@@ -22,6 +23,7 @@ class Tecido {
     required this.texto,
     required this.imagem,
     this.tileSource = '',
+    this.referencias = '', // <-- default para não quebrar dados antigos
   });
 
   Map<String, dynamic> toMap() {
@@ -33,7 +35,8 @@ class Tecido {
       'nome': nome,
       'texto': texto,
       'imagem': imagem,
-      'tileSource': tileSource, // <-- garantir presente
+      'tileSource': tileSource,
+      'referencias': referencias, // <-- adicionado ao map
     };
   }
 
@@ -71,6 +74,7 @@ class Tecido {
       texto: map['texto']?.toString() ?? '',
       imagem: map['imagem']?.toString() ?? '',
       tileSource: map['tileSource']?.toString() ?? '',
+      referencias: map['referencias']?.toString() ?? '', // <-- leitura segura
     );
   }
 }
