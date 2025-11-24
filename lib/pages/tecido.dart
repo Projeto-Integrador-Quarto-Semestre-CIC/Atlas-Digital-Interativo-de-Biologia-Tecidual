@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:app_pii/components/barra_lateral.dart';
-import 'package:app_pii/components/viewer.dart'; 
+import 'package:app_pii/components/viewer.dart';
 import 'package:app_pii/components/barra_ferramentas.dart';
 import 'package:webview_windows/webview_windows.dart' as webview_windows;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
- 
+
 class PaginaTecido extends StatefulWidget {
-  const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
+  const PaginaTecido({
+    super.key,
+    required this.nome,
+    required this.descricao,
+    required this.referenciasBibliograficas,
+    required this.tileSource,
+  });
+
   final String nome;
   final String descricao;
   final String referenciasBibliograficas;
@@ -32,11 +39,20 @@ class _DescricaoCompleta extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Descrição:',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
         Text(
           descricao,
           style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         const Text(
           'Referências bibliográficas:',
           style: TextStyle(
@@ -57,14 +73,16 @@ class _DescricaoCompleta extends StatelessWidget {
 }
 
 class _PaginaTecidoState extends State<PaginaTecido> {
-   late Widget _viewer;
-   WebViewController? _mobileController;
-   webview_windows.WebviewController? _windowsController;
-   double _zoom = 1.0;
-   final double _minZoom = 0.1;
-   final double _maxZoom = 100.0;
-   bool get _controllersReady => _mobileController != null || _windowsController != null;
-   static const double _breakpoint = 900;
+  late Widget _viewer;
+  WebViewController? _mobileController;
+  webview_windows.WebviewController? _windowsController;
+
+  double _zoom = 1.0;
+  final double _minZoom = 0.1;
+  final double _maxZoom = 100.0;
+  bool get _controllersReady =>
+      _mobileController != null || _windowsController != null;
+  static const double _breakpoint = 900;
 
   Future<void> _applyZoom(double zoom) async {
     final js = '''
@@ -95,7 +113,8 @@ class _PaginaTecidoState extends State<PaginaTecido> {
     return math.log(z / _minZoom) / math.log(_maxZoom / _minZoom);
   }
 
-  Widget _wrapViewer(BuildContext context, Widget viewer, {double minHeight = 500}) {
+  Widget _wrapViewer(BuildContext context, Widget viewer,
+      {double minHeight = 500}) {
     final width = MediaQuery.of(context).size.width;
     if (width >= _breakpoint) return viewer;
     return ConstrainedBox(
@@ -107,7 +126,8 @@ class _PaginaTecidoState extends State<PaginaTecido> {
   @override
   void initState() {
     super.initState();
-    print('PaginaTecido: tileSource="${widget.tileSource}" (len=${widget.tileSource.length})');
+    print(
+        'PaginaTecido: tileSource="${widget.tileSource}" (len=${widget.tileSource.length})');
 
     // Inicializa o Viewer p/ evitar LaterInitializationError
     _viewer = Viewer(
@@ -121,7 +141,8 @@ class _PaginaTecidoState extends State<PaginaTecido> {
     );
 
     if (widget.tileSource.isEmpty) {
-      print('PaginaTecido: tileSource vazio — verifique DB / fluxo de criação do tecido');
+      print(
+          'PaginaTecido: tileSource vazio — verifique DB / fluxo de criação do tecido');
     } else {
       _debugCheckDzi(widget.tileSource);
     }
@@ -135,10 +156,11 @@ class _PaginaTecidoState extends State<PaginaTecido> {
     try {
       final uri = Uri.parse(url);
       final resp = await http.get(uri);
-      print('GET $url -> status ${resp.statusCode}, content-length header: ${resp.headers['content-length']}, bytes: ${resp.bodyBytes.length}');
+      print(
+          'GET $url -> status ${resp.statusCode}, content-length header: ${resp.headers['content-length']}, bytes: ${resp.bodyBytes.length}');
       if (resp.statusCode == 200) {
         final prefix = String.fromCharCodes(resp.bodyBytes.take(512));
-        print('Primeiros bytes / trecho do .dzi:\n${prefix}');
+        print('Primeiros bytes / trecho do .dzi:\n$prefix');
         if (prefix.contains('<Image') || prefix.contains('<?xml')) {
           print('Parece um .dzi válido (contém <?xml ou <Image).');
         } else {
@@ -172,16 +194,14 @@ class _PaginaTecidoState extends State<PaginaTecido> {
 
   @override
   Widget build(BuildContext context) {
-
     return LayoutBuilder(
       builder: (context, constraints) {
         const double breakpoint = 900;
         final isNarrow = constraints.maxWidth < breakpoint;
 
         return Scaffold(
-           backgroundColor: const Color(0xFF4B5190),
+          backgroundColor: const Color(0xFF4B5190),
           drawer: isNarrow ? const SidebarDrawer() : null,
-
           appBar: isNarrow
               ? AppBar(
                   backgroundColor: Colors.transparent,
@@ -203,10 +223,11 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               height: 48,
                               margin: const EdgeInsets.only(left: 8),
                               decoration: BoxDecoration(
-                                color: Color(0xFF38853A),
+                                color: const Color(0xFF38853A),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.menu, color: Colors.white),
+                              child: const Icon(Icons.menu,
+                                  color: Colors.white),
                             ),
                           ),
                         ),
@@ -220,7 +241,6 @@ class _PaginaTecidoState extends State<PaginaTecido> {
           body: Row(
             children: [
               if (!isNarrow) const Sidebar(),
-
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -231,61 +251,77 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                             Flexible(
                               flex: 2,
                               child: Column(
-                                  children:[
-                                    Container(
-                                      height: 48,
-                                      color: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      child: Row(
-                                         children: [
-                                           IconButton(
-                                             icon: const Icon(Icons.reply),
-                                             color: const Color(0xFF38853A),
-                                             onPressed: () => Navigator.of(context).maybePop(),
-                                           ),
-                                           SizedBox(width: 8),
-                                           Container(width: 1, height: double.infinity, color: Colors.grey[300]),
-                                           Expanded(
-                                             child: Center(
-                                               child: Text(
-                                                 widget.nome,
-                                                 style: const TextStyle(
-                                                   fontSize: 24,
-                                                   fontWeight: FontWeight.w600,
-                                                   color: Colors.black87,
-                                                 ),
-                                                 maxLines: 1,
-                                                 overflow: TextOverflow.ellipsis,
-                                               ),
-                                             ),
-                                           ),
-                                           Container(width: 1, height: double.infinity, color: Colors.grey[300]),
-                                           SizedBox(width: 8),
-                                           IconButton(
-                                             icon: const Icon(Icons.zoom_out_map),
-                                             color: const Color(0xFF38853A),
-                                             onPressed: () {
-                                               // TODO: toggle fullscreen
-                                             },
-                                           ),
-                                         ],
-                                       ),
-                                     ),
-                                    const SizedBox(height: 6),
-                                    Expanded(child: _wrapViewer(context, _viewer)),
-                                     BarraFerramentas(
-                                       initialSlider: _zoomToSlider(_zoom),
-                                       controllersReady: _controllersReady,
-                                       sliderWidth: 160,
-                                       onApplyZoom: (z) => _applyZoom(z),
-                                       onChanged: (s) {
-                                         setState(() {
-                                           _zoom = _sliderToZoom(s);
-                                         });
-                                       },
-                                     ),
-                                  ],
-                              ), 
+                                children: [
+                                  Container(
+                                    height: 48,
+                                    color: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    child: Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.reply),
+                                          color: const Color(0xFF38853A),
+                                          onPressed: () => Navigator.of(
+                                                  context)
+                                              .maybePop(),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          width: 1,
+                                          height: double.infinity,
+                                          color: Colors.grey[300],
+                                        ),
+                                        Expanded(
+                                          child: Center(
+                                            child: Text(
+                                              widget.nome,
+                                              style: const TextStyle(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
+                                              ),
+                                              maxLines: 1,
+                                              overflow:
+                                                  TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          width: 1,
+                                          height: double.infinity,
+                                          color: Colors.grey[300],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        IconButton(
+                                          icon: const Icon(
+                                              Icons.zoom_out_map),
+                                          color: const Color(0xFF38853A),
+                                          onPressed: () {
+                                            // TODO: toggle fullscreen
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Expanded(
+                                    child:
+                                        _wrapViewer(context, _viewer),
+                                  ),
+                                  BarraFerramentas(
+                                    initialSlider: _zoomToSlider(_zoom),
+                                    controllersReady: _controllersReady,
+                                    sliderWidth: 160,
+                                    onApplyZoom: (z) => _applyZoom(z),
+                                    onChanged: (s) {
+                                      setState(() {
+                                        _zoom = _sliderToZoom(s);
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 16, width: 20),
                             Flexible(
@@ -293,7 +329,8 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               child: SingleChildScrollView(
                                 child: _DescricaoCompleta(
                                   descricao: widget.descricao,
-                                  referenciasBibliograficas: widget.referenciasBibliograficas,
+                                  referenciasBibliograficas:
+                                      widget.referenciasBibliograficas,
                                 ),
                               ),
                             ),
@@ -304,24 +341,36 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                             Flexible(
                               flex: 3,
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
                                 children: [
                                   Container(
                                     height: 48,
                                     color: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
                                         IconButton(
                                           icon: const Icon(Icons.reply),
                                           color: const Color(0xFF38853A),
                                           padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                                          onPressed: () => Navigator.of(context).maybePop(),
+                                          constraints:
+                                              const BoxConstraints(
+                                                  minWidth: 36,
+                                                  minHeight: 36),
+                                          onPressed: () => Navigator.of(
+                                                  context)
+                                              .maybePop(),
                                         ),
                                         const SizedBox(width: 8),
-                                        Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                        Container(
+                                          width: 1,
+                                          height: double.infinity,
+                                          color: Colors.grey[300],
+                                        ),
                                         Expanded(
                                           child: Center(
                                             child: Text(
@@ -332,17 +381,26 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                                                 color: Colors.black87,
                                               ),
                                               maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                              overflow:
+                                                  TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ),
-                                        Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                        Container(
+                                          width: 1,
+                                          height: double.infinity,
+                                          color: Colors.grey[300],
+                                        ),
                                         const SizedBox(width: 8),
                                         IconButton(
-                                          icon: const Icon(Icons.zoom_out_map),
+                                          icon: const Icon(
+                                              Icons.zoom_out_map),
                                           color: const Color(0xFF38853A),
                                           padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                          constraints:
+                                              const BoxConstraints(
+                                                  minWidth: 36,
+                                                  minHeight: 36),
                                           onPressed: () {
                                             // TODO: toggle fullscreen
                                           },
@@ -351,23 +409,24 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                   Expanded(
-                                     child: Container(
-                                       color: Colors.white,
-                                       child: _wrapViewer(context, _viewer),
-                                     ),
-                                   ),
-                                    BarraFerramentas(
-                                      initialSlider: _zoomToSlider(_zoom),
-                                      controllersReady: _controllersReady,
-                                      sliderWidth: 160,
-                                      onApplyZoom: (z) => _applyZoom(z),
-                                      onChanged: (s) {
-                                        setState(() {
-                                          _zoom = _sliderToZoom(s);
-                                        });
-                                      },
+                                  Expanded(
+                                    child: Container(
+                                      color: Colors.white,
+                                      child: _wrapViewer(
+                                          context, _viewer),
                                     ),
+                                  ),
+                                  BarraFerramentas(
+                                    initialSlider: _zoomToSlider(_zoom),
+                                    controllersReady: _controllersReady,
+                                    sliderWidth: 160,
+                                    onApplyZoom: (z) => _applyZoom(z),
+                                    onChanged: (s) {
+                                      setState(() {
+                                        _zoom = _sliderToZoom(s);
+                                      });
+                                    },
+                                  ),
                                 ],
                               ),
                             ),
@@ -377,7 +436,8 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               child: SingleChildScrollView(
                                 child: _DescricaoCompleta(
                                   descricao: widget.descricao,
-                                  referenciasBibliograficas: widget.referenciasBibliograficas,
+                                  referenciasBibliograficas:
+                                      widget.referenciasBibliograficas,
                                 ),
                               ),
                             ),

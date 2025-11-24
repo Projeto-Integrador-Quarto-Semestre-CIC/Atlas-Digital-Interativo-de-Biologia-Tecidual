@@ -4,6 +4,9 @@ import '../components/card_tipo_tecido.dart';
 import '../components/botao_tecido.dart';
 import '../services/tecidos_service.dart';
 
+// IMPORTANTE: importar a página do tecido
+import 'tecido.dart';
+
 class PaginaGrupoTecido extends StatefulWidget {
   const PaginaGrupoTecido({super.key});
 
@@ -89,7 +92,9 @@ class _PaginaGrupoTecidoState extends State<PaginaGrupoTecido> {
       itemCount: tecidos.length,
       itemBuilder: (context, index) {
         final tecido = tecidos[index];
-        print('DEBUG: tecido id=${tecido.id} nome=${tecido.nome} tileSource="${tecido.tileSource}"');
+        print(
+          'DEBUG: tecido id=${tecido.id} nome=${tecido.nome} tileSource="${tecido.tileSource}"',
+        );
 
         final assetPath = tecido.imagemAssetPath;
         final imagePath = assetPath.isEmpty ? null : assetPath;
@@ -99,10 +104,17 @@ class _PaginaGrupoTecidoState extends State<PaginaGrupoTecido> {
           imagePath: imagePath,
           corTitulo: Colors.black,
           onTap: () {
-            Navigator.pushNamed(
+            // >>> AQUI montamos a navegação para PaginaTecido <<<
+            Navigator.push(
               context,
-              '/tecido',
-              arguments: tecido,
+              MaterialPageRoute(
+                builder: (_) => PaginaTecido(
+                  nome: tecido.nome,
+                  descricao: tecido.texto,
+                  referenciasBibliograficas: tecido.referencias,
+                  tileSource: tecido.tileSource,
+                ),
+              ),
             );
           },
         );
