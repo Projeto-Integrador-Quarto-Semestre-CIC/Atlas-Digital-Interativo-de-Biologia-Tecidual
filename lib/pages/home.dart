@@ -56,6 +56,7 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ------------------ VISÃO GERAL --------------------
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -66,26 +67,53 @@ class HomePage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'VISÃO GERAL\nSOBRE O APP',
+                            'VISÃO GERAL SOBRE O APP',
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 16),
+
                           Text(
-                            'Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.\n\n'
-                            'Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.\n\n'
-                            'Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.',
+                            '''
+O App é uma plataforma moderna desenvolvida para apoiar o estudo, a pesquisa e o ensino da citologia — uma área essencial da biologia celular e das ciências biomédicas. O aplicativo foi projetado para oferecer uma experiência rica, intuitiva e altamente visual, reunindo imagens de alta qualidade, descrições detalhadas e conteúdos educacionais interativos.
+
+Este atlas digital funciona como um guia de referência completo, permitindo que estudantes, professores e profissionais explorem estruturas celulares com clareza, organização e contextualização científica. Todas as informações são apresentadas de forma didática, com foco na compreensão morfológica, funcional e diagnóstica das células.
+
+🔍 Objetivos do Aplicativo
+- Facilitar a aprendizagem da citologia por meio de recursos digitais intuitivos.  
+- Substituir e complementar materiais impressos tradicionais.  
+- Fornecer imagens ampliáveis com alta resolução.  
+- Apoiar o ensino acadêmico com conteúdos confiáveis e atualizados.  
+- Servir como ferramenta de consulta para profissionais da saúde.
+
+📚 Conteúdos Disponíveis
+O aplicativo reúne:
+- Descrições detalhadas de componentes celulares.  
+- Explicações sobre organização estrutural e função.  
+- Comparações morfológicas entre diferentes tipos celulares.  
+- Sessões explicativas sobre técnicas citológicas.  
+- Imagens ampliáveis com marcadores e legendas.  
+
+🧭 Navegação Intuitiva
+A interface foi construída para ser simples e eficiente. As seções são organizadas de forma lógica, permitindo que o usuário explore o conteúdo de maneira fluida, seja para estudo rápido ou pesquisa aprofundada.
+
+O objetivo principal é fornecer um ambiente digital acessível, claro e completo, tornando o aprendizado mais eficiente e visualmente rico.
+''',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey[800],
+                              height: 1.6,
                             ),
                           ),
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 24),
+
+                    // ------------------ CITOLOGIA --------------------
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -103,13 +131,49 @@ class HomePage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
+
                           Text(
-                            'Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.\n\n'
-                            'Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.\n\n'
-                            'Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.',
+                            '''
+A citologia é o ramo da biologia responsável pelo estudo das células — suas estruturas, funções, características morfológicas e comportamento em diferentes ambientes. Como unidade fundamental da vida, a célula desempenha funções vitais que sustentam todos os organismos, desde os mais simples até os mais complexos.
+
+O estudo citológico é essencial para diversas áreas, incluindo biomedicina, enfermagem, biologia, farmácia e medicina, sendo a base para compreender processos fisiológicos, patológicos e diagnósticos.
+
+🧬 O que a Citologia Estuda?
+A citologia engloba a análise de:
+- Morfologia celular  
+- Organelas e suas funções  
+- Ciclo celular e divisão  
+- Processos metabólicos essenciais  
+- Interações celulares  
+- Técnicas de coloração e observação microscópica  
+
+🔬 Importância da Citologia
+A citologia tem grande relevância científica e médica, pois:
+- Auxilia no diagnóstico de doenças, incluindo câncer.  
+- Permite identificar alterações morfológicas patológicas.  
+- Fornece base para estudos de genética, bioquímica e fisiologia.  
+- Ajuda a compreender como tecidos e órgãos são formados.  
+
+🧪 Técnicas Utilizadas
+O aplicativo também aborda conteúdos explicativos sobre métodos citológicos, como:
+- Colorações clássicas (H&E, Papanicolau, Giemsa, entre outras).  
+- Preparação de lâminas.  
+- Microscopia óptica e digital.  
+- Técnicas modernas de análise celular.  
+
+🧠 Para Quem é Este Atlas?
+Este atlas digital é ideal para:
+- Estudantes de cursos da área da saúde.  
+- Professores que buscam recursos visuais para aulas.  
+- Profissionais que necessitam revisar conceitos celulares.  
+- Pesquisadores que precisam de referência rápida e acessível.  
+
+A citologia é uma ciência visual, e um atlas digital facilita imensamente a observação, o estudo detalhado e a comparação entre diferentes tipos celulares — o que torna o aprendizado mais dinâmico, claro e eficiente.
+''',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey[800],
+                              height: 1.6,
                             ),
                           ),
                         ],

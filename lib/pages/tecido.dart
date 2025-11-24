@@ -6,6 +6,8 @@ import 'package:webview_windows/webview_windows.dart' as webview_windows;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
+
+import 'package:app_pii/pages/fullscreen_viewer.dart';
  
 class PaginaTecido extends StatefulWidget {
   const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
@@ -32,23 +34,32 @@ class _DescricaoCompleta extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Descrição:',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
         Text(
           descricao,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
         const SizedBox(height: 8),
         const Text(
           'Referências bibliográficas:',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           referenciasBibliograficas,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          style: const TextStyle(color: Colors.white70, fontSize: 20),
         ),
         const SizedBox(height: 24),
       ],
@@ -265,7 +276,11 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                                              icon: const Icon(Icons.zoom_out_map),
                                              color: const Color(0xFF38853A),
                                              onPressed: () {
-                                               // TODO: toggle fullscreen
+                                                Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) => FullscreenViewerPage(tileSource: widget.tileSource),
+                                                ),
+                                              );
                                              },
                                            ),
                                          ],
@@ -344,7 +359,11 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                                           onPressed: () {
-                                            // TODO: toggle fullscreen
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => FullscreenViewerPage(tileSource: widget.tileSource),
+                                              ),
+                                            );
                                           },
                                         ),
                                       ],
