@@ -1,8 +1,8 @@
 # 📘 Atlas-Digital-Interativo-de-Biologia-Tecidual
 
-O **Atlas Digital Interativo de Biologia Tecidual** é um projeto educacional desenvolvido em parceria com a [FMABC](https://fmabc.br), com o objetivo de aprimorar o ensino de **citologia e histologia** por meio de recursos digitais interativos. 
-
-A aplicação visa simular a experiência de observação microscópica, permitindo que alunos e professores explorem **lâminas citológicas escaneadas em altíssima resolução** (até 1.000x), diretamente em dispositivos **web, desktop ou mobile**.
+O **Atlas Digital Interativo de Biologia Tecidual** é um projeto educacional desenvolvido em parceria com a [FMABC](https://fmabc.br),criado para modernizar e aprimorar o ensino de **citologia e histologia** por meio de ferramentas digitais interativas.
+A plataforma simula a experiência de observação microscópica, permitindo que alunos e professores analisem **lâminas citológicas escaneadas em altíssima resolução** (até 1.000x) diretamente em dispositivos **web, desktop ou mobile**.
+O objetivo é proporcionar uma experiência acessível, detalhada e imersiva para o estudo de estruturas celulares e teciduais.
 
 ## ⚙️ Tecnologias:
 - [💠Dart](https://dart.dev)
