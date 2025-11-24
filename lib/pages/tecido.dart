@@ -119,7 +119,7 @@ class _PaginaTecidoState extends State<PaginaTecido> {
   void initState() {
     super.initState();
     print('PaginaTecido: tileSource="${widget.tileSource}" (len=${widget.tileSource.length})');
-
+    print('PaginaTecido: referenciasBibliograficas="${widget.referenciasBibliograficas}" (len=${widget.referenciasBibliograficas.length})');
     // Inicializa o Viewer p/ evitar LaterInitializationError
     _viewer = Viewer(
       tileSource: widget.tileSource,
