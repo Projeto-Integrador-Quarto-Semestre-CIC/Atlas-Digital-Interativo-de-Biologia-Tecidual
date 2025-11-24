@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
               builder: (_) => PaginaTecido(
                 nome: args.nome,
                 descricao: args.texto,
-                referenciasBibliograficas: '',
+                referencias: args.referencias,
                 tileSource: args.tileSource.isNotEmpty ? TecidosService.urlFromRelative(args.tileSource) : '',
               ),
             );
@@ -83,7 +83,7 @@ class _TecidoLoaderPage extends StatelessWidget {
         return PaginaTecido(
           nome: t.nome,
           descricao: t.texto,
-          referenciasBibliograficas: '',
+          referencias: t.referencias,
           tileSource: t.tileSource.isNotEmpty ? TecidosService.urlFromRelative(t.tileSource) : '',
         );
       },

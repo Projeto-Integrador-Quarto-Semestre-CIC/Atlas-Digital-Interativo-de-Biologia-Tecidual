@@ -10,10 +10,10 @@ import 'package:http/http.dart' as http;
 import 'package:app_pii/pages/fullscreen_viewer.dart';
  
 class PaginaTecido extends StatefulWidget {
-  const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
+  const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referencias, required this.tileSource});
   final String nome;
   final String descricao;
-  final String referenciasBibliograficas;
+  final String referencias;
   final String tileSource;
 
   @override
@@ -23,11 +23,11 @@ class PaginaTecido extends StatefulWidget {
 class _DescricaoCompleta extends StatelessWidget {
   const _DescricaoCompleta({
     required this.descricao,
-    required this.referenciasBibliograficas,
+    required this.referencias,
   }) : super();
 
   final String descricao;
-  final String referenciasBibliograficas;
+  final String referencias;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +58,7 @@ class _DescricaoCompleta extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          referenciasBibliograficas,
+          referencias,
           style: const TextStyle(color: Colors.white70, fontSize: 20),
         ),
         const SizedBox(height: 24),
@@ -119,7 +119,7 @@ class _PaginaTecidoState extends State<PaginaTecido> {
   void initState() {
     super.initState();
     print('PaginaTecido: tileSource="${widget.tileSource}" (len=${widget.tileSource.length})');
-    print('PaginaTecido: referenciasBibliograficas="${widget.referenciasBibliograficas}" (len=${widget.referenciasBibliograficas.length})');
+    print('PaginaTecido: referencias="${widget.referencias}" (len=${widget.referencias.length})');
     // Inicializa o Viewer p/ evitar LaterInitializationError
     _viewer = Viewer(
       tileSource: widget.tileSource,
@@ -308,7 +308,7 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               child: SingleChildScrollView(
                                 child: _DescricaoCompleta(
                                   descricao: widget.descricao,
-                                  referenciasBibliograficas: widget.referenciasBibliograficas,
+                                  referencias: widget.referencias,
                                 ),
                               ),
                             ),
@@ -396,7 +396,7 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               child: SingleChildScrollView(
                                 child: _DescricaoCompleta(
                                   descricao: widget.descricao,
-                                  referenciasBibliograficas: widget.referenciasBibliograficas,
+                                  referencias: widget.referencias,
                                 ),
                               ),
                             ),
