@@ -21,3 +21,40 @@ O objetivo é proporcionar uma experiência acessível, detalhada e imersiva par
 - [@MurilloGmbi14](https://github.com/MurilloGambi14)
 - [@PabloHenrique70](https://github.com/Pablohenrique70)
 - [@VPortoV](https://github.com/VPortoV)
+
+# Configurando o ambiente:
+
+Primeiro, certifique-se que você possui o [Flutter SDK](https://docs.flutter.dev/install) e o [Python](https://www.python.org/downloads/) instalados em sua máquina.
+
+Instale via ``pip install`` as seguintes bibliotecas Python:
+- ``openslide-python``
+-  ``Pillow``
+
+Depois, baixe e configure a biblioteca [OpenSlide](https://openslide.org/download/) de acordo com seu sistema operacional.
+
+Por fim, abra um terminal no diretório do projeto e cole o seguinte código:
+```powershell
+flutter pub get
+```
+Isso fará o flutter baixar todas as dependências do projeto.
+
+# Rodando o aplicativo:
+
+Abra um terminal no diretório do projeto e cole o seguinte código:
+```powershell
+dart run bin/server.dart
+```
+Isso fará com que o servidor back-end inicie. **Certifique-se de não fechar o terminal enquanto a aplicação estiver rodando.**
+
+Depois, abra outro terminal no diretório do projeto e cole o seguinte código:
+```
+flutter run
+```
+Isso faz com que o aplicativo seja iniciado. Caso esteja tudo certo, você verá uma mensagem assim:
+
+
+![A imagem consiste de um print do terminal contendo três opções: 1-Windows, 2-Chrome e 3-Edge.](https://github.com/Projeto-Integrador-Quarto-Semestre-CIC/imagens_readme/blob/923f076a5a4369d2970afa5c23a631b7d379a7e6/print_terminal.png)
+
+Estes são dispositivos nos quais podemos rodar nosso aplicativo. Para selecionar o dispositivo desejado, basta digitar o número referente à opção no terminal.
+
+Normalmente, você já conseguirá testar o aplicativo via **[2] Chrome** ou **[3] Edge**. Nós recomendamos testar via **[1] Windows**, porém para isso são necessários alguns passos extras, que podem ser encontrados [clicando aqui](https://docs.flutter.dev/platform-integration/windows/setup).

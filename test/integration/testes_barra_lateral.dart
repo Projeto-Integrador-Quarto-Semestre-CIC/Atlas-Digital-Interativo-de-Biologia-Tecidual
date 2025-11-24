@@ -17,7 +17,7 @@ void main() {
         home: PaginaTecido(
           nome: 'Tecido X',
           descricao: 'Descrição',
-          referenciasBibliograficas: 'Referência 1\n Referência 2',
+          referencias: 'Referência 1\n Referência 2',
           tileSource: "http://localhost:8000/002_dzi/002.dzi"
         ),
       ));
@@ -38,7 +38,7 @@ void main() {
         home: PaginaTecido(
           nome: 'Tecido X',
           descricao: 'Descrição',
-          referenciasBibliograficas: 'Referência 1\n Referência 2',
+          referencias: 'Referência 1\n Referência 2',
           tileSource: "http://localhost:8000/002_dzi/002.dzi"
         ),
       ));

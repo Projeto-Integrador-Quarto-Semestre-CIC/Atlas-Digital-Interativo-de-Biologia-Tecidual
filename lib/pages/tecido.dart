@@ -6,20 +6,14 @@ import 'package:webview_windows/webview_windows.dart' as webview_windows;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
+
 import 'package:app_pii/pages/fullscreen_viewer.dart';
-
+ 
 class PaginaTecido extends StatefulWidget {
-  const PaginaTecido({
-    super.key,
-    required this.nome,
-    required this.descricao,
-    required this.referenciasBibliograficas,
-    required this.tileSource,
-  });
-
+  const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referencias, required this.tileSource});
   final String nome;
   final String descricao;
-  final String referenciasBibliograficas;
+  final String referencias;
   final String tileSource;
 
   @override
@@ -29,11 +23,11 @@ class PaginaTecido extends StatefulWidget {
 class _DescricaoCompleta extends StatelessWidget {
   const _DescricaoCompleta({
     required this.descricao,
-    required this.referenciasBibliograficas,
+    required this.referencias,
   }) : super();
 
   final String descricao;
-  final String referenciasBibliograficas;
+  final String referencias;
 
   @override
   Widget build(BuildContext context) {
@@ -44,28 +38,28 @@ class _DescricaoCompleta extends StatelessWidget {
           'Descrição:',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           descricao,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
         const SizedBox(height: 16),
         const Text(
           'Referências bibliográficas:',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          referenciasBibliograficas,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          referencias,
+          style: const TextStyle(color: Colors.white70, fontSize: 20),
         ),
         const SizedBox(height: 24),
       ],
@@ -127,9 +121,8 @@ class _PaginaTecidoState extends State<PaginaTecido> {
   @override
   void initState() {
     super.initState();
-    print(
-        'PaginaTecido: tileSource="${widget.tileSource}" (len=${widget.tileSource.length})');
-
+    print('PaginaTecido: tileSource="${widget.tileSource}" (len=${widget.tileSource.length})');
+    print('PaginaTecido: referencias="${widget.referencias}" (len=${widget.referencias.length})');
     // Inicializa o Viewer p/ evitar LaterInitializationError
     _viewer = Viewer(
       tileSource: widget.tileSource,
@@ -252,81 +245,65 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                             Flexible(
                               flex: 2,
                               child: Column(
-                                children: [
-                                  Container(
-                                    height: 48,
-                                    color: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
-                                    child: Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.reply),
-                                          color: const Color(0xFF38853A),
-                                          onPressed: () => Navigator.of(
-                                                  context)
-                                              .maybePop(),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          width: 1,
-                                          height: double.infinity,
-                                          color: Colors.grey[300],
-                                        ),
-                                        Expanded(
-                                          child: Center(
-                                            child: Text(
-                                              widget.nome,
-                                              style: const TextStyle(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black87,
-                                              ),
-                                              maxLines: 1,
-                                              overflow:
-                                                  TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          width: 1,
-                                          height: double.infinity,
-                                          color: Colors.grey[300],
-                                        ),
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          icon: const Icon(
-                                              Icons.zoom_out_map),
-                                          color: const Color(0xFF38853A),
-                                          onPressed: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (_) => FullscreenViewerPage(tileSource: widget.tileSource),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Expanded(
-                                    child:
-                                        _wrapViewer(context, _viewer),
-                                  ),
-                                  BarraFerramentas(
-                                    initialSlider: _zoomToSlider(_zoom),
-                                    controllersReady: _controllersReady,
-                                    sliderWidth: 160,
-                                    onApplyZoom: (z) => _applyZoom(z),
-                                    onChanged: (s) {
-                                      setState(() {
-                                        _zoom = _sliderToZoom(s);
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
+                                  children:[
+                                    Container(
+                                      height: 48,
+                                      color: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      child: Row(
+                                         children: [
+                                           IconButton(
+                                             icon: const Icon(Icons.reply),
+                                             color: const Color(0xFF38853A),
+                                             onPressed: () => Navigator.of(context).maybePop(),
+                                           ),
+                                           SizedBox(width: 8),
+                                           Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                           Expanded(
+                                             child: Center(
+                                               child: Text(
+                                                 widget.nome,
+                                                 style: const TextStyle(
+                                                   fontSize: 24,
+                                                   fontWeight: FontWeight.w600,
+                                                   color: Colors.black87,
+                                                 ),
+                                                 maxLines: 1,
+                                                 overflow: TextOverflow.ellipsis,
+                                               ),
+                                             ),
+                                           ),
+                                           Container(width: 1, height: double.infinity, color: Colors.grey[300]),
+                                           SizedBox(width: 8),
+                                           IconButton(
+                                             icon: const Icon(Icons.zoom_out_map),
+                                             color: const Color(0xFF38853A),
+                                             onPressed: () {
+                                                Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) => FullscreenViewerPage(tileSource: widget.tileSource),
+                                                ),
+                                              );
+                                             },
+                                           ),
+                                         ],
+                                       ),
+                                     ),
+                                    const SizedBox(height: 6),
+                                    Expanded(child: _wrapViewer(context, _viewer)),
+                                     BarraFerramentas(
+                                       initialSlider: _zoomToSlider(_zoom),
+                                       controllersReady: _controllersReady,
+                                       sliderWidth: 160,
+                                       onApplyZoom: (z) => _applyZoom(z),
+                                       onChanged: (s) {
+                                         setState(() {
+                                           _zoom = _sliderToZoom(s);
+                                         });
+                                       },
+                                     ),
+                                  ],
+                              ), 
                             ),
                             const SizedBox(height: 16, width: 20),
                             Flexible(
@@ -334,8 +311,7 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               child: SingleChildScrollView(
                                 child: _DescricaoCompleta(
                                   descricao: widget.descricao,
-                                  referenciasBibliograficas:
-                                      widget.referenciasBibliograficas,
+                                  referencias: widget.referencias,
                                 ),
                               ),
                             ),
@@ -407,7 +383,11 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                                                   minWidth: 36,
                                                   minHeight: 36),
                                           onPressed: () {
-                                            // TODO: toggle fullscreen
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => FullscreenViewerPage(tileSource: widget.tileSource),
+                                              ),
+                                            );
                                           },
                                         ),
                                       ],
@@ -441,8 +421,7 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                               child: SingleChildScrollView(
                                 child: _DescricaoCompleta(
                                   descricao: widget.descricao,
-                                  referenciasBibliograficas:
-                                      widget.referenciasBibliograficas,
+                                  referencias: widget.referencias,
                                 ),
                               ),
                             ),
