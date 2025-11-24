@@ -131,11 +131,6 @@ class _SidebarContent extends StatelessWidget {
                   route: '/adicionar',
                   icon: Icons.add_box,
                 ),
-                buildSidebarButton(
-                  label: 'GERENCIAR PROF.',
-                  route: '/gerenciar',
-                  icon: Icons.list,
-                ),
               ],
             ],
           );
