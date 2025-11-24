@@ -6,7 +6,8 @@ import 'package:webview_windows/webview_windows.dart' as webview_windows;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
- 
+import 'package:app_pii/pages/fullscreen_viewer.dart';
+
 class PaginaTecido extends StatefulWidget {
   const PaginaTecido({super.key, required this.nome, required this.descricao, required this.referenciasBibliograficas, required this.tileSource});
   final String nome;
@@ -344,7 +345,11 @@ class _PaginaTecidoState extends State<PaginaTecido> {
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                                           onPressed: () {
-                                            // TODO: toggle fullscreen
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => FullscreenViewerPage(tileSource: widget.tileSource),
+                                              ),
+                                            );
                                           },
                                         ),
                                       ],
